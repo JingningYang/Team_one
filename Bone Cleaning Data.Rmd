@@ -1,0 +1,56 @@
+---
+title: "inital EDA"
+author: "He Guo"
+date: "2/7/2020"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(readxl)
+library(dplyr)
+data <- readxl::read_xlsx("BU Thesis Data.xlsx", sheet = 2)
+data <- data[-c(90:135),]
+data <- select(data, -`Bone Type`, -`Percentage of Feature Present`)
+data$`Bone Specimen` <- gsub("\\,.*","", data$`Bone Specimen`)
+data$`Bone Specimen` <- gsub("[^0-9]","", data$`Bone Specimen`)
+data$`Fracture Angle`[data$`Bisecting Fracture`==0 & data$`Fracture-like`==0]<-"No Fracturing"
+data$`Fracture Type`[data$`Bisecting Fracture`==0 & data$`Fracture-like`==0]<-"No Fracturing"
+data$`Fracture Surface`[data$`Bisecting Fracture`==0 & data$`Fracture-like`==0]<-"No Fracturing"
+data$`Fracture Outline`[data$`Bisecting Fracture`==0 & data$`Fracture-like`==0]<-"No Fracturing"
+data$`Fractographic Features`[data$`Bisecting Fracture`==0 & data$`Fracture-like`==0]<-"No Fracturing"
+```
+
+```{r}
+data$`Bisecting Fracture`<-ordered(data$`Bisecting Fracture`,levels = c("0", "1"))
+data$`Fracture-like`<-ordered(data$`Fracture-like`,levels = c("0","1"))
+```
+
+```{r}
+data$`Fracture Angle`[data$`Fracture Angle`=="N/A"]<-"No Feature"
+data$`Fracture Angle`<-ordered(data$`Fracture Angle`,levels = c("No Feature","No Fracturing","OBLIQUE","INTERMEDIATE", "RIGHT ANGLES"))
+```
+
+```{r}
+data$`Fracture Type`[data$`Fracture Type`=="N/A"]<-"No Feature"
+data$`Fracture Type`<-ordered(data$`Fracture Type`,levels = c("No Feature" ,"No Fracturing","OBLIQUE","SEGMENTAL","BUTTERFLY","SPIRAL","TRANSVERSE","COMMINUTED/SEGMENTAL","COMMINUTED"))
+```
+
+```{r}
+data$`Fracture Surface`[data$`Fracture Surface`=="N/A"]<-"No Feature"
+data$`Fracture Surface`<-ordered(data$`Fracture Surface`,levels = c("No Feature","No Fracturing","SMOOTH" , "INTERMEDIATE"))
+```
+
+```{r}
+data$`Fracture Outline`[data$`Fracture Outline`=="N/A"]<-"No Feature"
+data$`Fracture Outline`<-ordered(data$`Fracture Outline`,levels = c("No Feature","No Fracturing","CURVED/JAGGED","INTERMEDIATE", "TRANSVERSE" ))
+
+```
+
+```{r}
+data$`Fractographic Features`[data$`Fractographic Features`=="N/A"]<-"No Feature"
+data$`Fractographic Features`<-ordered(data$`Fractographic Features`,levels = c("No Feature","No Fracturing", "WAKE HACKLE" ,"WAKE HACKLE?, BONE MIRROR","WAKE HACKLE, WALLNER LINES","COMPRESSIONAL CURL","BONE HACKLE, WAKE HACKLE, ARREST RIDGE","COMPRESSION CURL" ,"WAKE HACKLE, BONE HACKLE" ,"ARREST RIDGE","WAKE HACKLE, BONE MIRROR","BONE MIRROR","WAKE HACKLE, ARREST RIDGE" ))
+
+```
+
+
+
