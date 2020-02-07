@@ -1,1 +1,5 @@
+library(dplyr)
 file <- readxl::read_xlsx("BU Thesis Data.xlsx", sheet = 2)
+data <- select(file, -`Bone Type`, -`Percentage of Feature Present`)
+data$`Bone Specimen` <- gsub("\\,.*","", data$`Bone Specimen`)
+data$`Bone Specimen` <- gsub("[^0-9]","", data$`Bone Specimen`)
