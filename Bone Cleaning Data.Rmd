@@ -45,7 +45,7 @@ bone$`Fractographic Features`<-ordered(bone$`Fractographic Features`,levels = c(
 ```
 # EDA
 ```{r}
-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))
+ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x = 'Drying Days')
 ```
 
 
