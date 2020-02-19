@@ -10,14 +10,22 @@ library(tidyverse)
 library(readxl)
 library(dplyr)
 library(nnet)
+library(rlist)
 # loading packages
 ```
 
 # Data Cleaning
 ```{r,echo=F}
 bone <- readxl::read_xlsx("BU Thesis Data.xlsx", sheet = 2)
-# read bone
-bone <- bone[-c(91:135),]
+drop<-c()
+for (i in 1:nrow(bone))  {
+  if (is.na(bone$`Bone Type`[i])){
+    drop <- c(drop, i)
+  }
+}
+bone<-bone[-drop,]
+# read bone and drop the date without information
+
 # ignore unobserved bone
 bone <- select(bone, -`Bone Type`, -`Percentage of Feature Present`)
 # select columns from Bone Type to Percentage of Feature Present
