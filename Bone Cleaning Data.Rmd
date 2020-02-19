@@ -9,13 +9,15 @@ output: pdf_document
 library(tidyverse)
 library(readxl)
 library(dplyr)
+library(nnet)
 # loading packages
 ```
 
+# Data Cleaning
 ```{r,echo=F}
-bone <- readxl::read_xlsx("BU Thesis data.xlsx", sheet = 2)
+bone <- readxl::read_xlsx("BU Thesis Data.xlsx", sheet = 2)
 # read bone
-bone <- bone[-c(90:135),]
+bone <- bone[-c(91:135),]
 # ignore unobserved bone
 bone <- select(bone, -`Bone Type`, -`Percentage of Feature Present`)
 # select columns from Bone Type to Percentage of Feature Present
@@ -24,40 +26,49 @@ bone$`Bone Specimen` <- gsub("[^0-9]","", bone$`Bone Specimen`)
 bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270'))
 bone$`days`<-as.numeric(bone$`Bone Specimen`)
 # creating variable drying day
-bone$`Fracture Angle`[bone$`Bisecting Fracture`==0 & bone$`Fracture-like`==0]<-"No Fracturing"
-bone$`Fracture Type`[bone$`Bisecting Fracture`==0 & bone$`Fracture-like`==0]<-"No Fracturing"
-bone$`Fracture Surface`[bone$`Bisecting Fracture`==0 & bone$`Fracture-like`==0]<-"No Fracturing"
-bone$`Fracture Outline`[bone$`Bisecting Fracture`==0 & bone$`Fracture-like`==0]<-"No Fracturing"
-bone$`Fractographic Features`[bone$`Bisecting Fracture`==0 & bone$`Fracture-like`==0]<-"No Fracturing"
+
+bone$`Fractographic Features`[bone$`Fractographic Features`=="N/A"]<-"No Feature"
+bone$`Fracture Angle`[bone$`Fracture Angle`=="N/A"]<-"non applicable"
+bone$`Fracture Type`[bone$`Fracture Type`=="N/A"]<-"non applicable"
+bone$`Fracture Surface`[bone$`Fracture Surface`=="N/A"]<-"non applicable"
+bone$`Fracture Outline`[bone$`Fracture Outline`=="N/A"]<-"non applicable"
+#Clean dependent variable
+
 bone$`Bisecting Fracture`<-ordered(bone$`Bisecting Fracture`,levels = c("0", "1"))
 bone$`Fracture-like`<-ordered(bone$`Fracture-like`,levels = c("0","1"))
-bone$`Fracture Angle`[bone$`Fracture Angle`=="N/A"]<-"No Feature"
-bone$`Fracture Angle`<-ordered(bone$`Fracture Angle`,levels = c("No Feature","No Fracturing","OBLIQUE","INTERMEDIATE", "RIGHT ANGLES"))
-bone$`Fracture Type`[bone$`Fracture Type`=="N/A"]<-"No Feature"
-bone$`Fracture Type`<-ordered(bone$`Fracture Type`,levels = c("No Feature" ,"No Fracturing","OBLIQUE","SEGMENTAL","BUTTERFLY","SPIRAL","TRANSVERSE","COMMINUTED/SEGMENTAL","COMMINUTED"))
-bone$`Fracture Surface`[bone$`Fracture Surface`=="N/A"]<-"No Feature"
-bone$`Fracture Surface`<-ordered(bone$`Fracture Surface`,levels = c("No Feature","No Fracturing","SMOOTH" , "INTERMEDIATE"))
-bone$`Fracture Outline`[bone$`Fracture Outline`=="N/A"]<-"No Feature"
-bone$`Fracture Outline`<-ordered(bone$`Fracture Outline`,levels = c("No Feature","No Fracturing","CURVED/JAGGED","INTERMEDIATE", "TRANSVERSE" ))
-bone$`Fractographic Features`[bone$`Fractographic Features`=="N/A"]<-"No Feature"
-bone$`Fractographic Features`<-ordered(bone$`Fractographic Features`,levels = c("No Feature","No Fracturing", "WAKE HACKLE" ,"WAKE HACKLE?, BONE MIRROR","WAKE HACKLE, WALLNER LINES","COMPRESSIONAL CURL","BONE HACKLE, WAKE HACKLE, ARREST RIDGE","COMPRESSION CURL" ,"WAKE HACKLE, BONE HACKLE" ,"ARREST RIDGE","WAKE HACKLE, BONE MIRROR","BONE MIRROR","WAKE HACKLE, ARREST RIDGE" ))
+bone$`Fracture Angle`<-ordered(bone$`Fracture Angle`,levels = c("non applicable","OBLIQUE","INTERMEDIATE", "RIGHT ANGLES"))
+bone$`Fracture Type`<-ordered(bone$`Fracture Type`,levels = c("non applicable" ,"OBLIQUE","SEGMENTAL","BUTTERFLY","SPIRAL","TRANSVERSE","COMMINUTED/SEGMENTAL","COMMINUTED"))
+bone$`Fracture Surface`<-ordered(bone$`Fracture Surface`,levels = c("non applicable","SMOOTH" , "INTERMEDIATE"))
+bone$`Fracture Outline`<-ordered(bone$`Fracture Outline`,levels = c("non applicable","CURVED/JAGGED","INTERMEDIATE", "TRANSVERSE" ))
+
+bone$`Fractographic Features`<-ordered(bone$`Fractographic Features`,levels = c("No Feature",    "WAKE HACKLE", "BONE MIRROR","COMPRESSIONAL CURL" ,"BONE HACKLE, WAKE HACKLE, ARREST RIDGE"
+ , "COMPRESSION CURL", "WAKE HACKLE, BONE HACKLE","ARREST RIDGE","WAKE HACKLE, BONE MIRROR", "WAKE HACKLE, ARREST RIDGE" ))
 # transfer variables to factor 
 ```
 # EDA
 ```{r}
-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x = 'Drying Days')
+ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x="Drying Days")
 ```
 
 
 
 # Models
 ```{r}
-fit1<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
-fit2<-glm(bone$`Fracture-like`~bone$days,family = binomial())
-summary(fit1)
-summary(fit2)
 
+fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
+fit.Fracture_like<-glm(bone$`Fracture-like`~bone$days,family = binomial())
+fit.Fracture_Angle<-multinom(bone$`Fracture Angle`~bone$days,trace = FALSE)
+fit.Fracture_Type<-multinom(bone$`Fracture Type`~bone$days,trace = FALSE)
+fit.Fracture_Surface<-multinom(bone$`Fracture Surface`~bone$days,trace = FALSE)
+fit.Fracture_Outline<-multinom(bone$`Fracture Outline`~bone$days,trace = FALSE)
+fit.Fractographic_Features<-multinom(bone$`Fractographic Features`~bone$days,trace = FALSE)
+fit.Number_of_Fragments <- glm(bone$`Number of Fragments (passion` ~ bone$days, family="poisson")
+summary(fit.Bisect_Fracture)
+summary(fit.Fracture_like)
+summary(fit.Fracture_Angle)
+summary(fit.Fracture_Type)
+summary(fit.Fracture_Surface)
+summary(fit.Fracture_Outline)
+summary(fit.Fractographic_Features)
+summary(fit.Number_of_Fragments)
 ```
-
-
-
