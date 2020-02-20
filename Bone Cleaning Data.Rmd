@@ -32,9 +32,9 @@ bone <- select(bone, -`Bone Type`, -`Percentage of Feature Present`)
 bone$`Bone Specimen` <- gsub("\\,.*","", bone$`Bone Specimen`)
 bone$`Bone Specimen` <- gsub("[^0-9]","", bone$`Bone Specimen`)
 bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270'))
-bone$`days`<-as.numeric(bone$`Bone Specimen`)
+bone$`days`<-bone$`Bone Specimen`
 # creating variable drying day
-
+typeof(bone$`Bone Specimen`)
 bone$`Fractographic Features`[bone$`Fractographic Features`=="N/A"]<-"No Feature"
 bone$`Fracture Angle`[bone$`Fracture Angle`=="N/A"]<-"non applicable"
 bone$`Fracture Type`[bone$`Fracture Type`=="N/A"]<-"non applicable"
@@ -42,15 +42,14 @@ bone$`Fracture Surface`[bone$`Fracture Surface`=="N/A"]<-"non applicable"
 bone$`Fracture Outline`[bone$`Fracture Outline`=="N/A"]<-"non applicable"
 #Clean dependent variable
 
-bone$`Bisecting Fracture`<-ordered(bone$`Bisecting Fracture`,levels = c("0", "1"))
-bone$`Fracture-like`<-ordered(bone$`Fracture-like`,levels = c("0","1"))
-bone$`Fracture Angle`<-ordered(bone$`Fracture Angle`,levels = c("non applicable","OBLIQUE","INTERMEDIATE", "RIGHT ANGLES"))
-bone$`Fracture Type`<-ordered(bone$`Fracture Type`,levels = c("non applicable" ,"OBLIQUE","SEGMENTAL","BUTTERFLY","SPIRAL","TRANSVERSE","COMMINUTED/SEGMENTAL","COMMINUTED"))
-bone$`Fracture Surface`<-ordered(bone$`Fracture Surface`,levels = c("non applicable","SMOOTH" , "INTERMEDIATE"))
-bone$`Fracture Outline`<-ordered(bone$`Fracture Outline`,levels = c("non applicable","CURVED/JAGGED","INTERMEDIATE", "TRANSVERSE" ))
+bone$`Bisecting Fracture`<-factor(bone$`Bisecting Fracture`)
+bone$`Fracture-like`<-factor(bone$`Fracture-like`)
+bone$`Fracture Angle`<-factor(bone$`Fracture Angle`)
+bone$`Fracture Type`<-factor(bone$`Fracture Type`)
+bone$`Fracture Surface`<-factor(bone$`Fracture Surface`)
+bone$`Fracture Outline`<-factor(bone$`Fracture Outline`)
 
-bone$`Fractographic Features`<-ordered(bone$`Fractographic Features`,levels = c("No Feature",    "WAKE HACKLE", "BONE MIRROR","COMPRESSIONAL CURL" ,"BONE HACKLE, WAKE HACKLE, ARREST RIDGE"
- , "COMPRESSION CURL", "WAKE HACKLE, BONE HACKLE","ARREST RIDGE","WAKE HACKLE, BONE MIRROR", "WAKE HACKLE, ARREST RIDGE" ))
+bone$`Fractographic Features`<-factor(bone$`Fractographic Features`)
 # transfer variables to factor 
 ```
 # EDA
