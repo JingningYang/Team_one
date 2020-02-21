@@ -28,12 +28,13 @@ bone<-bone[-drop,]
 # read bone and drop the date without information
 
 # ignore unobserved bone
-bone <- select(bone,-`Bone Type`,-`Percentage of Feature Present`)
+bone <- dplyr::select(bone,-`Bone Type`,-`Percentage of Feature Present`)
 # select columns from Bone Type to Percentage of Feature Present
 bone$`Bone Specimen` <- gsub("\\,.*","", bone$`Bone Specimen`)
 bone$`Bone Specimen` <- gsub("[^0-9]","", bone$`Bone Specimen`)
-bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270','360'))
 bone$`days`<-as.numeric(bone$`Bone Specimen`)
+bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270','360'))
+
 # creating variable drying day
 typeof(bone$`Bone Specimen`)
 bone$`Fractographic Features`[bone$`Fractographic Features`=="N/A"]<-"No Feature"
