@@ -11,6 +11,7 @@ library(readxl)
 library(dplyr)
 library(nnet)
 library(rlist)
+library(arm)
 # loading packages
 ```
 
@@ -27,12 +28,12 @@ bone<-bone[-drop,]
 # read bone and drop the date without information
 
 # ignore unobserved bone
-bone <- select(bone, -`Bone Type`, -`Percentage of Feature Present`)
+bone <- select(bone,-`Bone Type`,-`Percentage of Feature Present`)
 # select columns from Bone Type to Percentage of Feature Present
 bone$`Bone Specimen` <- gsub("\\,.*","", bone$`Bone Specimen`)
 bone$`Bone Specimen` <- gsub("[^0-9]","", bone$`Bone Specimen`)
 bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270','360'))
-bone$`days`<-bone$`Bone Specimen`
+bone$`days`<-as.numeric(bone$`Bone Specimen`)
 # creating variable drying day
 typeof(bone$`Bone Specimen`)
 bone$`Fractographic Features`[bone$`Fractographic Features`=="N/A"]<-"No Feature"
@@ -56,27 +57,52 @@ bone$`Fractographic Features`<-factor(bone$`Fractographic Features`)
 ```{r}
 ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x="Drying Days")
 ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`)) + geom_boxplot()+labs(x="Drying Days")
+
 ```
 
 
 
 # Models
+## Bisect Fracture
+
 ```{r}
 
 fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
+summary(fit.Bisect_Fracture)
+binnedplot(fitted(fit.Bisect_Fracture),resid(fit.Bisect_Fracture,type="response"))
+```
+
+## Fracture like
+```{r}
 fit.Fracture_like<-glm(bone$`Fracture-like`~bone$days,family = binomial())
+summary(fit.Fracture_like)
+binnedplot(fitted(fit.Fracture_like),resid(fit.Fracture_like,type="response"))
+```
+## Fracture Angle
+```{r}
 fit.Fracture_Angle<-multinom(bone$`Fracture Angle`~bone$days,trace = FALSE)
+summary(fit.Fracture_Angle)
+binnedplot(fitted(fit.Fracture_Angle),resid(fit.Fracture_Angle,type="response"))
+```
+
+## Number of Fragments
+```{r}
+fit.Number_of_Fragments <- glm(bone$`Number of Fragments` ~ bone$days, family="poisson")
+summary(fit.Number_of_Fragments)
+
+```
+
+```{r}
 fit.Fracture_Type<-multinom(bone$`Fracture Type`~bone$days,trace = FALSE)
 fit.Fracture_Surface<-multinom(bone$`Fracture Surface`~bone$days,trace = FALSE)
 fit.Fracture_Outline<-multinom(bone$`Fracture Outline`~bone$days,trace = FALSE)
 fit.Fractographic_Features<-multinom(bone$`Fractographic Features`~bone$days,trace = FALSE)
-fit.Number_of_Fragments <- glm(bone$`Number of Fragments` ~ bone$days, family="poisson")
-summary(fit.Bisect_Fracture)
-summary(fit.Fracture_like)
-summary(fit.Fracture_Angle)
+
+
+
 summary(fit.Fracture_Type)
 summary(fit.Fracture_Surface)
 summary(fit.Fracture_Outline)
 summary(fit.Fractographic_Features)
-summary(fit.Number_of_Fragments)
+
 ```
