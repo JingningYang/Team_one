@@ -31,7 +31,7 @@ bone <- select(bone, -`Bone Type`, -`Percentage of Feature Present`)
 # select columns from Bone Type to Percentage of Feature Present
 bone$`Bone Specimen` <- gsub("\\,.*","", bone$`Bone Specimen`)
 bone$`Bone Specimen` <- gsub("[^0-9]","", bone$`Bone Specimen`)
-bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270'))
+bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270','360'))
 bone$`days`<-bone$`Bone Specimen`
 # creating variable drying day
 typeof(bone$`Bone Specimen`)
@@ -55,6 +55,7 @@ bone$`Fractographic Features`<-factor(bone$`Fractographic Features`)
 # EDA
 ```{r}
 ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x="Drying Days")
+ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`)) + geom_boxplot()+labs(x="Drying Days")
 ```
 
 
