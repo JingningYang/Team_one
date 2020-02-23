@@ -12,6 +12,7 @@ library(dplyr)
 library(nnet)
 library(rlist)
 library(arm)
+library(knitr)
 # loading packages
 ```
 
@@ -56,6 +57,14 @@ bone$`Fractographic Features`<-factor(bone$`Fractographic Features`)
 ```
 # EDA
 ```{r}
+options(digits = 2) 
+table1<-rbind(table(bone$`Bisecting Fracture`,bone$`Bone Specimen`)[2,]/15,table(bone$`Fracture-like`,bone$`Bone Specimen`)[2,]/15)
+row.names(table1)<-c('Bisecting percentage','Fracture-like percentage')
+kable(table1,caption = 'Bisecting Fracture and Fracture-like percentage for different drying-day groups')
+
+
+
+
 ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x="Drying Days")
 ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`)) + geom_boxplot()+labs(x="Drying Days")
 
