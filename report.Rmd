@@ -1,0 +1,189 @@
+---
+title: "report"
+author: "Jingning Yang, Yanwen Liu"
+date: "2/21/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(readxl)
+library(dplyr)
+library(nnet)
+library(rlist)
+library(arm)
+library(knitr)
+library(MASS)
+# loading packages
+```
+
+# Introduction
+Our client, Reshma Satish, a PhD student at Boston University's Department of Forensic Anthropology,administered a project involves fracturing 135 long deer bones using a standardized fracturing apparatus over a period of 540 days. The bones are broken into 9 groups with 15 bones in each group and each group is fractured at different times(0 days,30 days,60 days,90 days,180 days,270 days, etc.) Her goal was to investigate how time of exposure of long bones affects variables such as the type of fracture angle, the type of fracture surface morphology,etc.that is created on the bones. Currently, our client only has data until day 270 since this experiment still keep going.
+
+This report will start with a description of the EDA, as well as Data analysis/Data structure. Then we will describe the methods we will use on modeling part, followed by our analysis.
+
+# Data Cleaning and EDA
+
+## Data structure
+
+We are provided the data in an excel document with 7 groups of drying days and a total of 105 bones. There are 10 variables in the dataset, but we will only focus one 8 of them, with Bisect Fracture and Fracture-like as binary responses, Number of fragments as a numerical response, and Fracture Angle, Fracture Type, Fracture Surface, Fracture Outline, and Fractographic Features as unordered categorical responses. 
+
+## Data Cleaning
+```{r,echo=F}
+bone <- readxl::read_xlsx("BU Thesis Data.xlsx", sheet = 2)
+drop<-c()
+for (i in 1:nrow(bone))  {
+  if (is.na(bone$`Bone Type`[i])){
+    drop <- c(drop, i)
+  }
+}
+bone<-bone[-drop,]
+# read bone and drop the date without information
+
+# ignore unobserved bone
+bone <- dplyr::select(bone,-`Bone Type`,-`Percentage of Feature Present`)
+# select columns from Bone Type to Percentage of Feature Present
+bone$`Bone Specimen` <- gsub("\\,.*","", bone$`Bone Specimen`)
+bone$`Bone Specimen` <- gsub("[^0-9]","", bone$`Bone Specimen`)
+bone$`days`<-as.numeric(bone$`Bone Specimen`)
+bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270','360'))
+
+# creating variable drying day
+typeof(bone$`Bone Specimen`)
+bone$`Fractographic Features`[bone$`Fractographic Features`=="N/A"]<-"No Feature"
+bone$`Fracture Angle`[bone$`Fracture Angle`=="N/A"]<-"non applicable"
+bone$`Fracture Type`[bone$`Fracture Type`=="N/A"]<-"non applicable"
+bone$`Fracture Surface`[bone$`Fracture Surface`=="N/A"]<-"non applicable"
+bone$`Fracture Outline`[bone$`Fracture Outline`=="N/A"]<-"non applicable"
+#Clean dependent variable
+
+bone$`Bisecting Fracture`<-factor(bone$`Bisecting Fracture`)
+bone$`Fracture-like`<-factor(bone$`Fracture-like`)
+bone$`Fracture Angle`<-factor(bone$`Fracture Angle`)
+bone$`Fracture Type`<-factor(bone$`Fracture Type`)
+bone$`Fracture Surface`<-factor(bone$`Fracture Surface`)
+bone$`Fracture Outline`<-factor(bone$`Fracture Outline`)
+
+bone$`Fractographic Features`<-factor(bone$`Fractographic Features`)
+# transfer variables to factor 
+```
+At a first glance of the raw dataset, there are many NA inputs. After discussed with our client, we decide to  change NA in Fracture Angle, Fracture Type, Fracture Surface, and Fracture Outline to non applicable and change NA in Fractographic Features to No Feature. Moreover, we create numerical variable drying days from variable Bone Specimen for future analysis.
+
+## EDA
+We conduct a basic exploratory data analysis (EDA) to visualize the data and find some patterns between variables. We focus on the two binary responses, Number of fragments, and the Fractographic Features as well.
+```{r,echo=F}
+options(digits = 2) 
+table1<-rbind(table(bone$`Bisecting Fracture`,bone$`Bone Specimen`)[2,]/15,table(bone$`Fracture-like`,bone$`Bone Specimen`)[2,]/15)
+row.names(table1)<-c('Bisecting percentage','Fracture-like percentage')
+kable(table1,caption = 'Bisecting Fracture and Fracture-like percentage for different drying-day groups')
+
+ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x="Drying Days")
+ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`)) + geom_boxplot()+labs(x="Drying Days")
+
+```
+
+
+# Modeling & Interpretation (YW-poisson) (HG-fracture type & surface)
+We used logistic regression, poisson regression, and multinomial logit model based on different type of predictors in our dataset.
+
+### Bisect Fracture part
+Since we assume response variable "bisect fracture" is a binary outcomes(0 or 1) and predictor "days" is continuous, we are using logistic regression to figure out relationship between the probability of "bisect fracture" and value of "days".         
+In addition, when "bisect fracture" is 0, it means the bone did not break by the standard fracturing machine, otherwise, it means the bone broke by the machine.        
+```{r}
+fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
+coef(fit.Bisect_Fracture) #estimated coefficients
+summary(fit.Bisect_Fracture)$coefficients[,4] #p-value
+```
+From the output, the estimated intercept coefficent 0.03 correspond to the log odds of broke the bone with average days, in other words, on average days, expected probability of broke the bone is expit(0.03)=0.4925=49%.    
+And one-unit increase in the predictor "days" increases the log odds of broke the bone(versus not broke the bone) by 0.0034.          
+Further, p-value of days is 0.052 indicates that it is somewhat not significant in determinging whether the bone broke by the machine or not.   
+```{r}
+binnedplot(fitted(fit.Bisect_Fracture),resid(fit.Bisect_Fracture,type="response"))
+```
+Since the discrete residual plot does not tell us much about the model fit, therefore, we are using Binned residual plot for this model, due to every points fall within the bounds, our model fit well in this case.
+
+### Fracture like part
+We assume "Fracture-like" is a binary outcomes(0 or 1) and predictor is "days" as well, therefore, as idea with above part, we used logistic regression to figure out their relationship.         
+In addition, when "Fracture-like" is 0, it means the bone has no surface feature after cut by the standard fracturing machine, otherwise, it means fracturing machine made a mark on the bone.
+```{r}
+fit.Fracture_like<-glm(bone$`Fracture-like`~bone$days,family = binomial())
+coef(fit.Fracture_like) #estimated coefficients
+summary(fit.Fracture_like)$coefficients[,4] #p-value
+```
+From the output, the estimated intercept coefficent 0.2551 correspond to the log odds of made a mark on bone with average days, in other words, on average days, expected probability of made a mark on bone is expit(0.2551)=0.436=43.6%.            
+And one-unit increase in the predictor "days" increases the log odds of made a mark on bone(versus no surface feature on bone) by 0.0064.         
+Also, p-value of days is 0.0055 indicates that it is significant in determinging whether the bone has any surface feature after cut by the machine.     
+```{r}
+binnedplot(fitted(fit.Fracture_like),resid(fit.Fracture_like,type="response"))
+```
+Same logic with above part, our model fit well in this case.
+
+### Fracture Angle part
+We assume "Fracture Angle" as no natural-order variable(nominal), since we cannot compare the order of angle of fresh bone and dry bone, and also N/A(non applicable) in this variable, so we used multinomial logit model in this case.
+```{r}
+fit.Fracture_Angle<-multinom(bone$`Fracture Angle`~bone$days,trace = FALSE)
+coef(fit.Fracture_Angle) #estimated coefficients
+```
+From the output, the baseline is Fracture Angle = Intermediate.    
+A one-unit increase in the variable "days" is associated with the decrease in the log odds of being in Intermediate fracture angle vs. non applicable fracture angle in the amount of 0.0057.    
+A one-unit increase in the variable "days" is associated with the decrease in the log odds of being in Intermediate fracture angle vs. oblique fracture angle in the amount of 0.003.    
+In other words, if one-unit increase in "days", your chances of staying in the intermediate fracture angle category are higher compared to staying in non applicable and oblique.      
+Since summary of multinomial logit model does not provide p-values, we can get significance of the coefficients by calculating z score and input it into the formula:    
+```{r}
+z <- summary(fit.Fracture_Angle)$coefficients / summary(fit.Fracture_Angle)$standard.errors
+p <- (1-pnorm(abs(z),0,1)) * 2
+p
+```
+From output, it represents p-value of coeffients. Only the coefficient of non applicable is somewhat significant because of 0.047 < 5%.   
+```{r}
+binnedplot(fitted(fit.Fracture_Angle),resid(fit.Fracture_Angle,type="response"))
+```
+Looks like our model fit kind of well in this case, except there might not good enough when expected values really small.    
+
+### Number of Fragments
+Considering "Number of Fragments" as a numerical variable, we use the poisson regression at first. 
+
+```{r,echo=F}
+fit.Number_of_Fragments1 <- glm(bone$`Number of Fragments` ~ bone$days, family="poisson")
+coef(fit.Number_of_Fragments1) #estimated coefficients
+pchisq(fit.Number_of_Fragments1$deviance,df=fit.Number_of_Fragments1$df.residual, lower.tail=FALSE)
+```
+Here our null hypothesis is that our model is correctly specified. The low p-value shows that we can reject this hypothesis, thus the possion regression model fits poorly. Next, we consider to use a negative binomial model.
+```{r,echo=F}
+fit.Number_of_Fragments2 <- glm.nb(bone$`Number of Fragments` ~ bone$days)
+summary(fit.Number_of_Fragments2)
+pchisq(fit.Number_of_Fragments2$deviance,df=fit.Number_of_Fragments2$df.residual, lower.tail=FALSE)
+```
+Using the negative binomial model, we have a better fit. The only variable "days" has a coefficient of 0.002247, which is statistically significant. This means that for each one-unit increase in "days", the expected log count of the number of fragments increases by 0.002247.
+
+### Fracture Outline
+We assume "Fracture Outline" as no natural-order(nominal) variable, same reason as "Fracture Angle" part.
+```{r}
+fit.Fracture_Outline<-multinom(bone$`Fracture Outline`~bone$days,trace = FALSE)
+coef(fit.Fracture_Outline) #estimated coefficients
+```
+
+
+```{r}
+z <- summary(fit.Fracture_Outline)$coefficients / summary(fit.Fracture_Outline)$standard.errors
+p <- (1-pnorm(abs(z),0,1)) * 2
+p
+```
+
+```{r}
+binnedplot(fitted(fit.Fracture_Outline),resid(fit.Fracture_Outline,type="response"))
+```
+
+
+### Fractographic Features
+
+```{r}
+fit.Fractographic_Features<-multinom(bone$`Fractographic Features`~bone$days,trace = FALSE)
+summary(fit.Fractographic_Features)
+binnedplot(fitted(fit.Fractographic_Features),resid(fit.Fractographic_Features,type="response"))
+``` 
+
+# Conclusion
+
+
