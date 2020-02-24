@@ -73,8 +73,7 @@ ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`
 
 
 # Models
-## Bisect Fracture
-
+## Bisecting Fracture
 ```{r}
 
 fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
