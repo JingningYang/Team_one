@@ -133,7 +133,7 @@ Since summary of multinomial logit model does not provide p-values, we can get s
 ```{r}
 z <- summary(fit.Fracture_Angle)$coefficients / summary(fit.Fracture_Angle)$standard.errors
 p <- (1-pnorm(abs(z),0,1)) * 2
-p
+p     # How to interpret significant part ??? 
 ```
 From output, it represents p-value of coeffients. Only the coefficient of non applicable is somewhat significant because of 0.047 < 5%.   
 ```{r}
@@ -158,31 +158,51 @@ pchisq(fit.Number_of_Fragments2$deviance,df=fit.Number_of_Fragments2$df.residual
 Using the negative binomial model, we have a better fit. The only variable "days" has a coefficient of 0.002247, which is statistically significant. This means that for each one-unit increase in "days", the expected log count of the number of fragments increases by 0.002247.
 
 ### Fracture Outline
-We assume "Fracture Outline" as no natural-order(nominal) variable, same reason as "Fracture Angle" part.
+We assume "Fracture Outline" as no natural-order(nominal) variable, same reason as "Fracture Angle" part, thus we used multinomial logit model.
 ```{r}
 fit.Fracture_Outline<-multinom(bone$`Fracture Outline`~bone$days,trace = FALSE)
 coef(fit.Fracture_Outline) #estimated coefficients
 ```
-
+From the output, the baseline is Fracture Angle = Cruved/Jagged.    
+A one-unit increase in the variable "days" is associated with the decrease in the log odds of being in curved fracture outline vs. intermediate fracture outline in the amount of 0.0155.    
+A one-unit increase in the variable "days" is associated with the decrease in the log odds of being in curved fracture outline vs. non applicable fracture outline in the amount of 0.0043.    
+In other words, if one-unit increase in "days", your chances of staying in the curved/jagged fracture outline category are higher compared to staying in non applicable, intermediate and transverse.      
+Get significance of the coefficients by calculating z score and input it into the formula:  
 
 ```{r}
 z <- summary(fit.Fracture_Outline)$coefficients / summary(fit.Fracture_Outline)$standard.errors
 p <- (1-pnorm(abs(z),0,1)) * 2
 p
 ```
+From output, it represents p-value of coeffients. Only the coefficient of non applicable is significant because of 0.017 < 5%.  
 
 ```{r}
 binnedplot(fitted(fit.Fracture_Outline),resid(fit.Fracture_Outline,type="response"))
 ```
-
+Looks like our model fit kind of well in this case, except there might not good enough when expected values really small. 
 
 ### Fractographic Features
-
+Since "Fractographic Features" is an no natural-order(nominal) variable, we used multinomial logit model as before.
 ```{r}
 fit.Fractographic_Features<-multinom(bone$`Fractographic Features`~bone$days,trace = FALSE)
-summary(fit.Fractographic_Features)
+coef(fit.Fractographic_Features)   #compression curl == compressional curl ?????
+```
+From the output, the baseline is Fractographic Features = Arrest Ridge.    
+A one-unit increase in the variable "days" is associated with the increase in the log odds of being in arrest ridge features vs. ibone hackle feature in the amount of 0.13.    
+A one-unit increase in the variable "days" is associated with the decrease in the log odds of being in arrest ridge features vs. bone hackle, wake hackgle, arrest ridge feature in the amount of 0.0042.    
+Same logic to interpret following coefficients.    
+In other words, if one-unit increase in "days", your chances of staying in the arrest ridge features category are higher compared to staying in bone hackle, wake hackle, arrest ridge feature category; bone mirror feature; compression curl feature category and so on, except bone hackle feature and wake hackle with arrest ridge feature.      
+Get significance of the coefficients by calculating z score and input it into the formula:     
+```{r}
+z <- summary(fit.Fractographic_Features)$coefficients / summary(fit.Fractographic_Features)$standard.errors
+p <- (1-pnorm(abs(z),0,1)) * 2
+p
+```
+From output, it represents p-value of coeffients. Only coefficients of "days" for bone hackle feature and wake hackle with arrest ridge feature category are significant because of 0.017 < 5%.      
+```{r}
 binnedplot(fitted(fit.Fractographic_Features),resid(fit.Fractographic_Features,type="response"))
 ``` 
+From the plot, most of points fall left handside, and it may hard to see whether they fall inside the bounds or not. Therefore, the model might not good enough.              
 
 # Conclusion
 
