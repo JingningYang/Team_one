@@ -1,6 +1,6 @@
 ---
 title: "report"
-author: "Jingning Yang, Yanwen Liu"
+author: "Jingning Yang, Yanwen Liu, He Guo"
 date: "2/21/2020"
 output: pdf_document
 ---
