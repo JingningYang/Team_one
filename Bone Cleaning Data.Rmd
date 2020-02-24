@@ -62,9 +62,6 @@ table1<-rbind(table(bone$`Bisecting Fracture`,bone$`Bone Specimen`)[2,]/15,table
 row.names(table1)<-c('Bisecting percentage','Fracture-like percentage')
 kable(table1,caption = 'Bisecting Fracture and Fracture-like percentage for different drying-day groups')
 
-
-
-
 ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x="Drying Days")
 ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`)) + geom_boxplot()+labs(x="Drying Days")
 
@@ -74,9 +71,7 @@ ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`
 
 # Models
 ## Bisect Fracture
-
 ```{r}
-
 fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
 summary(fit.Bisect_Fracture)
 binnedplot(fitted(fit.Bisect_Fracture),resid(fit.Bisect_Fracture,type="response"))
