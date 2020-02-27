@@ -70,7 +70,7 @@ bone$`Fractographic Features`<-factor(bone$`Fractographic Features`)
 ```
 At a first glance of the raw dataset, there are many NA inputs. After discussed with our client, we decide to  change NA in Fracture Angle, Fracture Type, Fracture Surface, and Fracture Outline to non applicable and change NA in Fractographic Features to No Feature. Moreover, we create numerical variable drying days from variable Bone Specimen for future analysis.
 
-## EDA
+## EDA (need revise, add explanation & change Fractographic features into 6 dummy varaibles.)
 We conduct a basic exploratory data analysis (EDA) to visualize the data and find some patterns between variables. We focus on the two binary responses, Number of fragments, and the Fractographic Features as well.
 ```{r,echo=F}
 options(digits = 2) 
@@ -85,23 +85,23 @@ ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`
 
 
 # Modeling & Interpretation (YW-poisson) (HG-fracture type & surface)
-We used logistic regression, poisson regression, and multinomial logit model based on different type of predictors in our dataset.
+We used logistic regression, poisson regression, and multinomial logit model based on different types of response variables in our dataset.
 
-### Bisect Fracture part
-Since we assume response variable "bisect fracture" is a binary outcomes(0 or 1) and predictor "days" is continuous, we are using logistic regression to figure out relationship between the probability of "bisect fracture" and value of "days".         
+### Bisect Fracture
+Since response variable "bisect fracture" is a binary outcomes(0 or 1), we are using logistic regression to figure out relationship between the probability of "bisect fracture" and value of "days".         
 In addition, when "bisect fracture" is 0, it means the bone did not break by the standard fracturing machine, otherwise, it means the bone broke by the machine.        
 ```{r}
 fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
-coef(fit.Bisect_Fracture) #estimated coefficients
-summary(fit.Bisect_Fracture)$coefficients[,4] #p-value
+summary(fit.Bisect_Fracture) #estimated coefficients & p-value
 ```
-From the output, the estimated intercept coefficent 0.03 correspond to the log odds of broke the bone with average days, in other words, on average days, expected probability of broke the bone is expit(0.03)=0.4925=49%.    
+From the output, the estimated intercept coefficent 0.029 correspond to the log odds of broke the bone with average days, in other words, on average days, expected probability of broke the bone is expit(0.029)=0.4927=49%.    
 And one-unit increase in the predictor "days" increases the log odds of broke the bone(versus not broke the bone) by 0.0034.          
-Further, p-value of days is 0.052 indicates that it is somewhat not significant in determinging whether the bone broke by the machine or not.   
+Further, p-value of days is 0.052 indicates that there is no strong evident but moderate evidence in support of the differences of the bone broke by the machine or not affected by drying time.       
 ```{r}
 binnedplot(fitted(fit.Bisect_Fracture),resid(fit.Bisect_Fracture,type="response"))
 ```
-Since the discrete residual plot does not tell us much about the model fit, therefore, we are using Binned residual plot for this model, due to every points fall within the bounds, our model fit well in this case.
+
+Since the discrete residual plot does not tell us much about the model fit, we are using Binned residual plot for this model. Due to every points fall within the bounds, our model fits well in this case.
 
 ### Fracture like part
 We assume "Fracture-like" is a binary outcomes(0 or 1) and predictor is "days" as well, therefore, as idea with above part, we used logistic regression to figure out their relationship.         
