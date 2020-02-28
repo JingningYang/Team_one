@@ -106,25 +106,9 @@ row.names(table1)<-c('Bisecting percentage','Fracture-like percentage')
 kable(table1,caption = 'Bisecting Fracture and Fracture-like percentage for different drying-day groups')
 ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`)) + geom_boxplot()+labs(x="Drying Days")
 
-
-WAKE_HACKLE<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `WAKE HACKLE`))+labs(x="Drying Days")
-
-BONE_HACKLE<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `BONE HACKLE`))+labs(x="Drying Days")
-
-BONE_MIRROR<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `BONE MIRROR`))+labs(x="Drying Days")
-
-CANTILEVER_CURL<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `CANTILEVER CURL`))+labs(x="Drying Days")
-
-WALLNER_LINES<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `WALLNER LINES`))+labs(x="Drying Days")
-
-ARREST_RIDGEL<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `ARREST RIDGE`))+labs(x="Drying Days")
-
-figure.1 <- ggarrange(WAKE_HACKLE, BONE_HACKLE, BONE_MIRROR,CANTILEVER_CURL,WALLNER_LINES,ARREST_RIDGEL,
-                    ncol = 2, nrow = 3)
-figure.1
-
 ```
-
+In the table, we give a bisecting percentage and fracture-like percentage for each groups of bones in different drying days. We can see a pattern that with the drying days increasing, it's more likely to have a bisecting or fracture-like happened during the standardized fracturing apparatus.  
+In the boxplot, we can see several outliers in the first three groups and large amount of zero value. It's hard to figure a clear pattern in the first four groups, but later on, then number of fragments are increasing as the drying days increasing.  
 
 # Modeling & Interpretation (YW-poisson) (HG-fracture type & surface)
 
@@ -289,16 +273,18 @@ Considering "Number of Fragments" as a numerical variable, we use the poisson re
 
 ```{r,echo=T}
 fit.Number_of_Fragments1 <- glm(bone$`Number of Fragments` ~ bone$days, family="poisson")
-coef(fit.Number_of_Fragments1) #estimated coefficients
+summary(fit.Number_of_Fragments1) #estimated coefficients
 pchisq(fit.Number_of_Fragments1$deviance,df=fit.Number_of_Fragments1$df.residual, lower.tail=FALSE)
+regout <- glm(bone$`Number of Fragments`~bone$days, family=quasipoisson)
+summary.glm(regout)$dispersion
 ```
-Here our null hypothesis is that our model is correctly specified. The low p-value shows that we can reject this hypothesis, thus the possion regression model fits poorly. Next, we consider to use a negative binomial model.
-```{r,echo=F}
+Here our null hypothesis is that our model is correctly specified. The low p-value shows that we can reject this hypothesis, thus the possion regression model fits poorly. Next, we check the dispersion of the data. We can see the variance of random component is roughly 3 times the size of the mean. There may be a over-dispersion problem. So we consider to use a negative binomial model.
+```{r,echo=T}
 fit.Number_of_Fragments2 <- glm.nb(bone$`Number of Fragments` ~ bone$days)
 summary(fit.Number_of_Fragments2)
 pchisq(fit.Number_of_Fragments2$deviance,df=fit.Number_of_Fragments2$df.residual, lower.tail=FALSE)
 ```
-Using the negative binomial model, we have a better fit. The only variable "days" has a coefficient of 0.002247, which is statistically significant. This means that for each one-unit increase in "days", the expected log count of the number of fragments increases by 0.002247.
+Using the negative binomial model, we have a better fit. The only variable "days" has a coefficient of 0.002247, which is statistically significant. This means that for each one-unit increase in "days", the expected log count of the number of fragments increases by 0.002247. It can be also intepreted as for each 100 unit increase in "days", the expected count of the number of fragments will be increased by 1.25 times.
 
 ### Fracture Outline
 We assume "Fracture Outline" as no natural-order(nominal) variable, same reason as "Fracture Angle" part, thus we used multinomial logit model.
