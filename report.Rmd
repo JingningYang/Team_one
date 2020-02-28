@@ -84,14 +84,15 @@ We used logistic regression, poisson regression, and multinomial logit model bas
 
 ## Fracture Type
 
-Log(Prob(COMMINUTED)/Prob(BUTTERFULY)) = 0.8269632 + 0.00216*Days
 
+###COMMINUTED relative to BUTTERFULY:
+  
 Intercept:  This is the multinomial logit estimate for COMMINUTED relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring COMMINUTED relative to BUTTERFULY is 0.8269632. Note that evaluating days equals to zero indicated that the day of starting  the experiment
 Days:  This is the multinomial logit estimate for a one unit increase in Days for COMMINUTED relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring COMMINUTED relative to BUTTERFULY would be expected to Increase by 10.00216.
 
-T-statistics for days in Log(Prob(COMMINUTED)/Prob(BUTTERFULY)) equals to |0.00216/0.002647403| = 0.8158939, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring COMMINUTED relative to BUTTERFULY
+T-statistics for days in Log(Prob(COMMINUTED)/Prob(BUTTERFULY)) equals to  0.8158939, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring COMMINUTED relative to BUTTERFULY
 
-Log(Prob(non applicable)/Prob(BUTTERFULY)) = 1.5166589 - 0.0024548581*Days 
+###non applicable relative to BUTTERFULY
 
 
 Intercept:  This is the multinomial logit estimate for non applicable relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring non applicable relative to BUTTERFULY is1.5166589. Note that evaluating days equals to zero indicated that the day of starting the experiment
@@ -101,6 +102,8 @@ T-statistics for days in Log(Prob(non applicable)/Prob(BUTTERFULY)) equals to | 
 
 Log(Prob(OBLIQUE)/Prob(BUTTERFULY)) = -0.1913727 -0.0027752170*Days
 
+### OBLIQUE relative to BUTTERFULY:
+
 Intercept:  This is the multinomial logit estimate for OBLIQUE relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring OBLIQUE relative to BUTTERFULY is-0.1913727. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days:  This is the multinomial logit estimate for a one unit increase in Days for OBLIQUE relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring OBLIQUE relative to BUTTERFULY would be expected to decrease by 0.0027752170.
 
@@ -109,12 +112,16 @@ T-statistics for days in Log(Prob(OBLIQUE)/Prob(BUTTERFULY)) equals to | -0.0027
 
 Log(Prob(SEGMENTAL)/Prob(BUTTERFULY)) = -0.5994698 -0.0006693986*Days
 
+###SEGMENTAL relative to BUTTERFULY:
+
 Intercept: This is the multinomial logit estimate for SEGMENTAL relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring SEGMENTAL relative to BUTTERFULY is-0.5994698. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days: This is the multinomial logit estimate for a one unit increase in Days for SEGMENTAL relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring SEGMENTAL relative to BUTTERFULY would be expected to decrease by -0.0006693986.
 
-T-statistics for days in Log(Prob(SEGMENTAL)/Prob(BUTTERFULY)) equals to | -0.0006693986/0.004110398| = 0.1628549, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring SEGMENTAL relative to BUTTERFULY。
+T-statistics for days in Log(Prob(SEGMENTAL)/Prob(BUTTERFULY)) equals to | -0.0006693986/0.004110398| = 0.1628549, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring SEGMENTAL relative to BUTTERFULY.
 
 Log(Prob(TRANSVERSE)/Prob(BUTTERFULY)) = -1.9804151 -0.004371236*Days
+
+###TRANSVERSE relative to BUTTERFULY:
 
 Intercept : This is the multinomial logit estimate for TRANSVERSE relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring TRANSVERSE relative to BUTTERFULY is -1.9804151. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days: This is the multinomial logit estimate for a one unit increase in Days for TRANSVERSE relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring TRANSVERSE relative to BUTTERFULY would be expected to decrease by 0.004371236.
@@ -128,7 +135,14 @@ summary(fit.Fracture_Type)
 binnedplot(fitted(fit.Fracture_Type),resid(fit.Fracture_Type,type="response"))
 ```
 
+```{r}
+t_stat_type <- summary(fit.Fracture_Type)$coefficients / summary(fit.Fracture_Type)$standard.errors
+t_stat_type
+```
+
 ## Fracture Surface
+
+###non applicable relative to INTERMEDIATE:
 
 Log(Prob(non applicable)/Prob(INTERMEDIATE))= 2.185304 -0.008706689*Days
 
@@ -137,12 +151,16 @@ Days: This is the multinomial logit estimate for a one unit increase in Days for
 
 T-statistics for days in Log(Prob(non applicable)/Prob(INTERMEDIATE)) equals to | 0.008706689/0.002536340| = 3.432777, which is greater than 2.  Then, the Days make a significant difference for log-odds of preferring non applicable relative to INTERMEDIATE
 
+###ROUGH relative to INTERMEDIATE:
+
 Log(Prob(ROUGH )/Prob(INTERMEDIATE))= -23.616556 + 0.060230466*Days
 
 Intercept:  This is the multinomial logit estimate for ROUGH relative to INTERMEDIATE when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring ROUGH relative to INTERMEDIATE is -23.616556. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days: This is the multinomial logit estimate for a one unit increase in Days for ROUGH relative to INTERMEDIATE.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring ROUGH relative to INTERMEDIATE would be expected to increase by 0.060230466.
 
 T-statistics for days in Log(Prob(ROUGH)/Prob(INTERMEDIATE)) equals to |0.060230466/0.002940204 | = 20.48513, which is greater than 2.  Then, the Days make a significant difference for log-odds of preferring ROUGH relative to INTERMEDIATE
+
+###SMOOTH relative to INTERMEDIATE:
 
 Log(Prob(SMOOTH)/Prob(INTERMEDIATE))= 2.255591-0.007492372*Days
 
@@ -157,6 +175,11 @@ According to the Binned residual plot, there is not clearly pattern.
 fit.Fracture_Surface<-multinom(bone$`Fracture Surface`~bone$days,trace = FALSE)
 summary(fit.Fracture_Surface)
 binnedplot(fitted(fit.Fracture_Surface),resid(fit.Fracture_Surface,type="response"))
+```
+
+```{r}
+t_stat_Surface <- summary(fit.Fracture_Surface)$coefficients / summary(fit.Fracture_Surface)$standard.errors
+t_stat_Surface
 ```
 
 ### Bisect Fracture
@@ -285,14 +308,19 @@ From the plot, most of points fall left handside, and it may hard to see whether
 ```{r}
 bone$`WAKE HACKLE`<-rep(0,nrow(bone))
 bone$`WAKE HACKLE`[grepl('WAKE HACKLE', bone$`Fractographic Features`)]<-1
+
 bone$`BONE HACKLE`<-rep(0,nrow(bone))
 bone$`BONE HACKLE`[grepl('BONE HACKLE', bone$`Fractographic Features`)]<-1
+
 bone$`BONE MIRROR`<-rep(0,nrow(bone))
 bone$`BONE MIRROR`[grepl('BONE MIRROR', bone$`Fractographic Features`)]<-1
+
 bone$`CANTILEVER CURL`<-rep(0,nrow(bone))
 bone$`CANTILEVER CURL`[grepl('CANTILEVER CURL', bone$`Fractographic Features`)]<-1
+
 bone$`ARREST RIDGE`<-rep(0,nrow(bone))
 bone$`ARREST RIDGE`[grepl('ARREST RIDGE', bone$`Fractographic Features`)]<-1
+
 bone$`WALLNER LINES`<-rep(0,nrow(bone))
 bone$`WALLNER LINES`[grepl('WALLNER LINES', bone$`Fractographic Features`)]<-1
 ```
@@ -300,7 +328,73 @@ bone$`WALLNER LINES`[grepl('WALLNER LINES', bone$`Fractographic Features`)]<-1
 ##Chi-square test for Independence
 
 ```{r}
-tbl = table(bone$`WAKE HACKLE`, bone$`BONE HACKLE`) 
-chisq.test(tbl) 
+tb.1 = table(bone$`WAKE HACKLE`, bone$`BONE HACKLE`) 
+chisq.test(tb.1) 
+tb.2 = table(bone$`WAKE HACKLE`, bone$`BONE MIRROR`) 
+chisq.test(tb.2) 
+tb.3 = table(bone$`WAKE HACKLE`, bone$`CANTILEVER CURL`) 
+chisq.test(tb.3) 
+tb.4 = table(bone$`WAKE HACKLE`, bone$`ARREST RIDGE`) 
+chisq.test(tb.4) 
+tb.5 = table(bone$`WAKE HACKLE`, bone$`WALLNER LINES`) 
+chisq.test(tb.5) 
+tb.6 = table(bone$`BONE HACKLE`, bone$`BONE MIRROR`) 
+chisq.test(tb.6) 
+tb.7 = table(bone$`BONE HACKLE`, bone$`CANTILEVER CURL`) 
+chisq.test(tb.7) 
+tb.8 = table(bone$`BONE HACKLE`, bone$`ARREST RIDGE`) 
+chisq.test(tb.8) 
+tb.9 = table(bone$`BONE HACKLE`, bone$`WALLNER LINES`) 
+chisq.test(tb.9)
+tb.10 = table(bone$`BONE MIRROR`, bone$`CANTILEVER CURL`) 
+chisq.test(tb.10)
+tb.11 = table(bone$`BONE MIRROR`, bone$`ARREST RIDGE`) 
+chisq.test(tb.11)
+tb.12 = table(bone$`BONE MIRROR`, bone$`WALLNER LINES`) 
+chisq.test(tb.12)
+tb.13 = table(bone$`CANTILEVER CURL`, bone$`ARREST RIDGE`) 
+chisq.test(tb.13)
+tb.14 = table(bone$`CANTILEVER CURL`, bone$`WALLNER LINES`) 
+chisq.test(tb.14)
+tb.15 = table(bone$`ARREST RIDGE`, bone$`WALLNER LINES`) 
+chisq.test(tb.15)
+```
+
+## Logistic Regression for six feature v.s. days
+
+```{r}
+fit.Feature.1<-glm(bone$`WAKE HACKLE`~bone$days,family = binomial())
+summary(fit.Feature.1)
+binnedplot(fitted(fit.Feature.1),resid(fit.Feature.1,type="response"))
+```
+
+```{r}
+fit.Feature.2<-glm(bone$`BONE HACKLE`~bone$days,family = binomial())
+summary(fit.Feature.2)
+binnedplot(fitted(fit.Feature.2),resid(fit.Feature.2,type="response"))
+```
+
+```{r}
+fit.Feature.3<-glm(bone$`BONE MIRROR`~bone$days,family = binomial())
+summary(fit.Feature.3)
+binnedplot(fitted(fit.Feature.3),resid(fit.Feature.3,type="response"))
+```
+
+```{r}
+fit.Feature.4<-glm(bone$`CANTILEVER CURL`~bone$days,family = binomial())
+summary(fit.Feature.4)
+binnedplot(fitted(fit.Feature.4),resid(fit.Feature.4,type="response"))
+```
+
+```{r}
+fit.Feature.5<-glm(bone$`ARREST RIDGE`~bone$days,family = binomial())
+summary(fit.Feature.5)
+binnedplot(fitted(fit.Feature.5),resid(fit.Feature.5,type="response"))
+```
+
+```{r}
+fit.Feature.6<-glm(bone$`WALLNER LINES`~bone$days,family = binomial())
+summary(fit.Feature.6)
+binnedplot(fitted(fit.Feature.6),resid(fit.Feature.6,type="response"))
 ```
 
