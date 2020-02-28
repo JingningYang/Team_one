@@ -15,6 +15,8 @@ library(rlist)
 library(arm)
 library(knitr)
 library(MASS)
+library(ggpubr)
+theme_set(theme_pubr())
 # loading packages
 ```
 
@@ -66,6 +68,35 @@ bone$`Fractographic Features`<-factor(bone$`Fractographic Features`)
 ```
 At a first glance of the raw dataset, there are many NA inputs. After discussed with our client, we decide to  change NA in Fracture Angle, Fracture Type, Fracture Surface, and Fracture Outline to non applicable and change NA in Fractographic Features to No Feature. Moreover, we create numerical variable drying days from variable Bone Specimen for future analysis.
 
+##Create Dummy Variable
+
+There are some observation have multiple feature in Fractographic Features variable.  Then, we create 6 dummy variable to indicate which feature appaer for a given observation. 
+```{r}
+bone$`WAKE HACKLE`<-rep(0,nrow(bone))
+bone$`WAKE HACKLE`[grepl('WAKE HACKLE', bone$`Fractographic Features`)]<-1
+bone$`WAKE HACKLE`<-as.factor(bone$`WAKE HACKLE`)
+
+bone$`BONE HACKLE`<-rep(0,nrow(bone))
+bone$`BONE HACKLE`[grepl('BONE HACKLE', bone$`Fractographic Features`)]<-1
+bone$`BONE HACKLE`<-as.factor(bone$`BONE HACKLE`)
+
+bone$`BONE MIRROR`<-rep(0,nrow(bone))
+bone$`BONE MIRROR`[grepl('BONE MIRROR', bone$`Fractographic Features`)]<-1
+bone$`BONE MIRROR`<-as.factor(bone$`BONE MIRROR`)
+
+bone$`CANTILEVER CURL`<-rep(0,nrow(bone))
+bone$`CANTILEVER CURL`[grepl('CANTILEVER CURL', bone$`Fractographic Features`)]<-1
+bone$`CANTILEVER CURL`<-as.factor(bone$`CANTILEVER CURL`)
+
+bone$`ARREST RIDGE`<-rep(0,nrow(bone))
+bone$`ARREST RIDGE`[grepl('ARREST RIDGE', bone$`Fractographic Features`)]<-1
+bone$`ARREST RIDGE`<-as.factor(bone$`ARREST RIDGE`)
+
+bone$`WALLNER LINES`<-rep(0,nrow(bone))
+bone$`WALLNER LINES`[grepl('WALLNER LINES', bone$`Fractographic Features`)]<-1
+bone$`WALLNER LINES`<-as.factor(bone$`WALLNER LINES`)
+```
+
 ## EDA (need revise, add explanation & change Fractographic features into 6 dummy varaibles.)
 We conduct a basic exploratory data analysis (EDA) to visualize the data and find some patterns between variables. We focus on the two binary responses, Number of fragments, and the Fractographic Features as well.
 ```{r,echo=F}
@@ -73,8 +104,25 @@ options(digits = 2)
 table1<-rbind(table(bone$`Bisecting Fracture`,bone$`Bone Specimen`)[2,]/15,table(bone$`Fracture-like`,bone$`Bone Specimen`)[2,]/15)
 row.names(table1)<-c('Bisecting percentage','Fracture-like percentage')
 kable(table1,caption = 'Bisecting Fracture and Fracture-like percentage for different drying-day groups')
-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `Fractographic Features`))+labs(x="Drying Days")
 ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`)) + geom_boxplot()+labs(x="Drying Days")
+
+
+WAKE_HACKLE<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `WAKE HACKLE`))+labs(x="Drying Days")
+
+BONE_HACKLE<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `BONE HACKLE`))+labs(x="Drying Days")
+
+BONE_MIRROR<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `BONE MIRROR`))+labs(x="Drying Days")
+
+CANTILEVER_CURL<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `CANTILEVER CURL`))+labs(x="Drying Days")
+
+WALLNER_LINES<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `WALLNER LINES`))+labs(x="Drying Days")
+
+ARREST_RIDGEL<-ggplot(data = bone) + geom_bar(mapping = aes(x = `Bone Specimen`, fill = `ARREST RIDGE`))+labs(x="Drying Days")
+
+figure.1 <- ggarrange(WAKE_HACKLE, BONE_HACKLE, BONE_MIRROR,CANTILEVER_CURL,WALLNER_LINES,ARREST_RIDGEL,
+                    ncol = 2, nrow = 3)
+figure.1
+
 ```
 
 
@@ -303,27 +351,6 @@ From the plot, most of points fall left handside, and it may hard to see whether
 
 
 
-##Create Dummy Variable
-
-```{r}
-bone$`WAKE HACKLE`<-rep(0,nrow(bone))
-bone$`WAKE HACKLE`[grepl('WAKE HACKLE', bone$`Fractographic Features`)]<-1
-
-bone$`BONE HACKLE`<-rep(0,nrow(bone))
-bone$`BONE HACKLE`[grepl('BONE HACKLE', bone$`Fractographic Features`)]<-1
-
-bone$`BONE MIRROR`<-rep(0,nrow(bone))
-bone$`BONE MIRROR`[grepl('BONE MIRROR', bone$`Fractographic Features`)]<-1
-
-bone$`CANTILEVER CURL`<-rep(0,nrow(bone))
-bone$`CANTILEVER CURL`[grepl('CANTILEVER CURL', bone$`Fractographic Features`)]<-1
-
-bone$`ARREST RIDGE`<-rep(0,nrow(bone))
-bone$`ARREST RIDGE`[grepl('ARREST RIDGE', bone$`Fractographic Features`)]<-1
-
-bone$`WALLNER LINES`<-rep(0,nrow(bone))
-bone$`WALLNER LINES`[grepl('WALLNER LINES', bone$`Fractographic Features`)]<-1
-```
 
 ##Chi-square test for Independence
 
@@ -396,5 +423,15 @@ binnedplot(fitted(fit.Feature.5),resid(fit.Feature.5,type="response"))
 fit.Feature.6<-glm(bone$`WALLNER LINES`~bone$days,family = binomial())
 summary(fit.Feature.6)
 binnedplot(fitted(fit.Feature.6),resid(fit.Feature.6,type="response"))
+```
+
+```{r}
+count_1 = 0
+for (i in 1:nrow(bone)){
+  if (bone$`WAKE HACKLE`[i]==1){
+    count_1=count_1+1
+  }
+    
+}
 ```
 
