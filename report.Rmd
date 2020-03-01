@@ -117,63 +117,73 @@ In the boxplot, we can see several outliers in the first three groups and large 
 We used logistic regression, poisson regression, negative binomial, and multinomial logit model based on different types of response variables in our dataset.
 
 ## Fracture Type
+
+According to the Fracture Type variable has 6 discrete outcomes and those outcomes aren't ordinal, which are non applicable, COMMINUTED     SEGMENTAL, BUTTERFLY, OBLIQUE and TRANSVERSE. Then we used normal multinomial logistic model.
+
+```{r}
+fit.Fracture_Type<-multinom(bone$`Fracture Type`~bone$days,trace = FALSE)
+summary(fit.Fracture_Type)
+```
+
 ### COMMINUTED relative to BUTTERFULY:
-  
-Intercept:  This is the multinomial logit estimate for COMMINUTED relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring COMMINUTED relative to BUTTERFULY is 0.8269632. Note that evaluating days equals to zero indicated that the day of starting the experiment.  
 
-Days:  This is the multinomial logit estimate for a one unit increase in Days for COMMINUTED relative to BUTTERFULY. If a subject was to increase Days by one point, the multinomial log-odds of preferring COMMINUTED relative to BUTTERFULY would be expected to increase by 10.00216.  
-
-T-statistics for Days in Log(Prob(COMMINUTED)/Prob(BUTTERFULY)) equals to  0.8158939, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring COMMINUTED relative to BUTTERFULY
+ 
+Intercept:  This is the multinomial logit estimate for COMMINUTED relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring COMMINUTED relative to BUTTERFULY is 0.83. Note that evaluating days equals to zero indicated that the day of starting  the experiment
+Days:  This is the multinomial logit estimate for a one unit increase in Days for COMMINUTED relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring COMMINUTED relative to BUTTERFULY would be expected to Increase by 0.00217.
 
 ### non applicable relative to BUTTERFULY
 
-Intercept:  This is the multinomial logit estimate for non applicable relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring non applicable relative to BUTTERFULY is 1.5166589. Note that evaluating days equals to zero indicated that the day of starting the experiment  
 
-Days: This is the multinomial logit estimate for a one unit increase in Days for non applicable relative to BUTTERFULY.  If a subject was to increase Days by one point, the multinomial log-odds of preferring non applicable relative to BUTTERFULY would be expected to decrease by  0.0024548581.  
+Intercept:  This is the multinomial logit estimate for non applicable relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring non applicable relative to BUTTERFULY is 1.52. Note that evaluating days equals to zero indicated that the day of starting the experiment
+Days: This is the multinomial logit estimate for a one unit increase in Days for non applicable relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring non applicable relative to BUTTERFULY would be expected to decrease by  0.00245.
 
-T-statistics for days in Log(Prob(non applicable)/Prob(BUTTERFULY)) equals to | -0.0024548581/0.002647403| = 0.8948441, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring non applicable relative to BUTTERFULY
-
-Log(Prob(OBLIQUE)/Prob(BUTTERFULY)) = -0.1913727 -0.0027752170*Days
 
 ### OBLIQUE relative to BUTTERFULY:
 
 Intercept:  This is the multinomial logit estimate for OBLIQUE relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring OBLIQUE relative to BUTTERFULY is-0.1913727. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days:  This is the multinomial logit estimate for a one unit increase in Days for OBLIQUE relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring OBLIQUE relative to BUTTERFULY would be expected to decrease by 0.0027752170.
 
-T-statistics for days in Log(Prob(OBLIQUE)/Prob(BUTTERFULY)) equals to | -0.0027752170
-/ 0.004192975| = 0.661873, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring OBLIQUE relative to BUTTERFULY
-
-Log(Prob(SEGMENTAL)/Prob(BUTTERFULY)) = -0.5994698 -0.0006693986*Days
-
 ### SEGMENTAL relative to BUTTERFULY:
 
-Intercept: This is the multinomial logit estimate for SEGMENTAL relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring SEGMENTAL relative to BUTTERFULY is-0.5994698. Note that evaluating days equals to zero indicated that the day of starting the experiment
-Days: This is the multinomial logit estimate for a one unit increase in Days for SEGMENTAL relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring SEGMENTAL relative to BUTTERFULY would be expected to decrease by -0.0006693986.
+Intercept: This is the multinomial logit estimate for SEGMENTAL relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring SEGMENTAL relative to BUTTERFULY is -0.5994698. Note that evaluating days equals to zero indicated that the day of starting the experiment
+Days: This is the multinomial logit estimate for a one unit increase in Days for SEGMENTAL relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring SEGMENTAL relative to BUTTERFULY would be expected to decrease by 0.0006693986.
 
-T-statistics for days in Log(Prob(SEGMENTAL)/Prob(BUTTERFULY)) equals to | -0.0006693986/0.004110398| = 0.1628549, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring SEGMENTAL relative to BUTTERFULY.
 
-Log(Prob(TRANSVERSE)/Prob(BUTTERFULY)) = -1.9804151 -0.004371236*Days
 
 ### TRANSVERSE relative to BUTTERFULY:
 
 Intercept : This is the multinomial logit estimate for TRANSVERSE relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring TRANSVERSE relative to BUTTERFULY is -1.9804151. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days: This is the multinomial logit estimate for a one unit increase in Days for TRANSVERSE relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring TRANSVERSE relative to BUTTERFULY would be expected to decrease by 0.004371236.
 
-T-statistics for days in Log(Prob(TRANSVERSE)/Prob(BUTTERFULY)) equals to | -0.0043712363/0.010436283 | =0.4188499, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring TRANSVERSE relative to BUTTERFULY
-
+### Checking Residual 
 According to the Binned residual plot, there is not clearly pattern. 
+
 ```{r}
-fit.Fracture_Type<-multinom(bone$`Fracture Type`~bone$days,trace = FALSE)
-summary(fit.Fracture_Type)
 binnedplot(fitted(fit.Fracture_Type),resid(fit.Fracture_Type,type="response"))
 ```
 
+### Checking P-values for each corresponding outcomes relative to baseline/BUTTERFULY
+
+P-values of non applicable is smaller than 0.05, so days makes a statistical significant for log-odds of preferring non applicable relative to baseline/BUTTERFULY.
+P-values of COMMINUTED, OBLIQUE, SEGMENTAL and TRANSVERSE are larger than 0.05, so days makes a statistical significant difference for log-odds of preferring COMMINUTED, OBLIQUE, SEGMENTAL and TRANSVERSE relative to baseline/BUTTERFULY.
+
 ```{r}
 t_stat_type <- summary(fit.Fracture_Type)$coefficients / summary(fit.Fracture_Type)$standard.errors
-t_stat_type
+T_statistics<-t_stat_type[,1]
+p_value<-setNames(c(0,0,0,0,0), c("COMMINUTED", "non applicable","OBLIQUE","SEGMENTAL","TRANSVERSE "))
+for(i in 1:5){
+  p_value[i]<-(1-pnorm(abs(T_statistics[i]),0,1)) * 2
+}
+p_value
 ```
 
+
 ## Fracture Surface
+
+```{r}
+fit.Fracture_Surface<-multinom(bone$`Fracture Surface`~bone$days,trace = FALSE)
+summary(fit.Fracture_Surface)
+```
 
 ### non applicable relative to INTERMEDIATE:
 
@@ -182,7 +192,7 @@ Log(Prob(non applicable)/Prob(INTERMEDIATE))= 2.185304 -0.008706689*Days
 Intercept: This is the multinomial logit estimate for non applicable relative to INTERMEDIATE when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring non applicable relative to INTERMEDIATE is 2.185304. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days: This is the multinomial logit estimate for a one unit increase in Days for non applicable relative to INTERMEDIATE.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring non applicable relative to INTERMEDIATE would be expected to decrease by 0.008706689.
 
-T-statistics for days in Log(Prob(non applicable)/Prob(INTERMEDIATE)) equals to | 0.008706689/0.002536340| = 3.432777, which is greater than 2.  Then, the Days make a significant difference for log-odds of preferring non applicable relative to INTERMEDIATE
+
 
 ### ROUGH relative to INTERMEDIATE:
 
@@ -191,7 +201,7 @@ Log(Prob(ROUGH )/Prob(INTERMEDIATE))= -23.616556 + 0.060230466*Days
 Intercept:  This is the multinomial logit estimate for ROUGH relative to INTERMEDIATE when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring ROUGH relative to INTERMEDIATE is -23.616556. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days: This is the multinomial logit estimate for a one unit increase in Days for ROUGH relative to INTERMEDIATE.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring ROUGH relative to INTERMEDIATE would be expected to increase by 0.060230466.
 
-T-statistics for days in Log(Prob(ROUGH)/Prob(INTERMEDIATE)) equals to |0.060230466/0.002940204 | = 20.48513, which is greater than 2.  Then, the Days make a significant difference for log-odds of preferring ROUGH relative to INTERMEDIATE
+
 
 ### SMOOTH relative to INTERMEDIATE:
 
@@ -200,19 +210,28 @@ Log(Prob(SMOOTH)/Prob(INTERMEDIATE))= 2.255591-0.007492372*Days
 Intercept:  This is the multinomial logit estimate for SMOOTH relative to INTERMEDIATE when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring SMOOTH relative to INTERMEDIATE is 2.255591. Note that evaluating days equals to zero indicated that the day of starting the experiment
 Days:  This is the multinomial logit estimate for a one unit increase in Days for SMOOTH relative to INTERMEDIATE.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring SMOOTH relative to INTERMEDIATE would be expected to decrease by 0.007492372.
 
-T-statistics for days in Log(Prob(SMOOTH)/Prob(INTERMEDIATE)) equals to |-0.007492372/0.002378579| = 3.149936, which is greater than 2.  Then, the Days make a significant difference for log-odds of preferring SMOOTH relative to INTERMEDIATE
 
-
+### Checking residual
 According to the Binned residual plot, there is not clearly pattern. 
+
 ```{r}
-fit.Fracture_Surface<-multinom(bone$`Fracture Surface`~bone$days,trace = FALSE)
-summary(fit.Fracture_Surface)
 binnedplot(fitted(fit.Fracture_Surface),resid(fit.Fracture_Surface,type="response"))
 ```
 
+
+### Checking P-values for each corresponding outcomes relative to Baseline/INTERMEDIATE
+
+P-values of ROUGH is smaller than 0.05, so days makes a statistical significant for log-odds of preferring ROUGH relatives to baseline/INTERMEDIATE
+P-values of non applicable and SMOOTH are larger than 0.05, so days makes a statistical significant difference for log-odds of preferring non applicable and SMOOTH relative to baseline/INTERMEDIATE.
+
 ```{r}
-t_stat_Surface <- summary(fit.Fracture_Surface)$coefficients / summary(fit.Fracture_Surface)$standard.errors
-t_stat_Surface
+t_stat_type.Surface <- summary(fit.Fracture_Surface)$coefficients / summary(fit.Fracture_Surface)$standard.errors
+T_statistics.Surface<-t_stat_type.Surface[,1]
+p_value.Surface<-setNames(c(0,0,0), c( "non applicable","ROUGH","SMOOTH"))
+for(i in 1:3){
+  p_value.Surface[i]<-(1-pnorm(abs(T_statistics[i]),0,1)) * 2
+}
+p_value.Surface
 ```
 
 ## Bisect Fracture
@@ -222,7 +241,7 @@ In addition, when "bisect fracture" is 0, it means the bone did not break by the
 fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
 summary(fit.Bisect_Fracture) #estimated coefficients & p-value
 ```
-From the output, the estimated intercept coefficent 0.029 correspond to the log odds of broke the bone with average days, in other words, on average days, expected probability of broke the bone is expit(0.029)=.507=50.7%.    
+From the output, the estimated intercept coefficent 0.029 correspond to the log odds of broke the bone with average days, in other words, on average days, expected probability of broke the bone is expit(0.029)=0.4927=49%.    
 And one-unit increase in the predictor "days" increases the log odds of broke the bone(versus not broke the bone) by 0.0034.          
 Further, p-value of days is 0.052 indicates that there is no strong evident but moderate evidence in support of the differences of the bone broke by the machine or not affected by drying time.       
 ```{r}
@@ -238,7 +257,7 @@ In addition, when "Fracture-like" is 0, it means the bone has no surface feature
 fit.Fracture_like<-glm(bone$`Fracture-like`~bone$days,family = binomial())
 summary(fit.Fracture_like) #estimated coefficients, p-value
 ```
-From the output, the estimated intercept coefficent 0.2551 correspond to the log odds of made a mark on bone with average days, in other words, on average days, expected probability of made a mark on bone is expit(0.2551)=0.563=56.3%.            
+From the output, the estimated intercept coefficent 0.2551 correspond to the log odds of made a mark on bone with average days, in other words, on average days, expected probability of made a mark on bone is expit(0.2551)=0.436=43.6%.            
 And one-unit increase in the predictor "days" increases the log odds of made a mark on bone(versus no surface feature on bone) by 0.0064.         
 Also, p-value of days is 0.0055 indicates that there is strong evidence in determinging whether the bone has any surface feature after cut by the machine affected by drying time.         
 ```{r}
@@ -331,7 +350,7 @@ Since p-value 1 > 0.05 significant level, therefore, we have strong evidence to 
 tb.3 = table(bone$`WAKE HACKLE`, bone$`CANTILEVER CURL`) 
 chisq.test(tb.3) 
 ```
-Since p-value 0.7 > 0.05 significant level, therefore, we have strong evidence to retain the null hypothesis. Thus, "WAKE HACKLE" is independent of "COMPRESSIONAL CURL".
+Since p-value 0.7 > 0.05 significant level, therefore, we have strong evidence to retain the null hypothesis. Thus, "WAKE HACKLE" is independent of "CANTILEVER CURL".
 ```{r, echo=T}
 tb.4 = table(bone$`WAKE HACKLE`, bone$`ARREST RIDGE`) 
 chisq.test(tb.4) 
@@ -452,17 +471,9 @@ count(bone,`WALLNER LINES`)
 Again, the low coefficient and p value of the varibale days, shows no evidence in support of the differences of the wallner lines feature when drying time changes.  
 Binned residual plot with most points outside the bound shows our model fits poor in this case. The possible reason is that we only have 2 bones have the wallner lines feature
 
-```{r}
-count_1 = 0
-for (i in 1:nrow(bone)){
-  if (bone$`WAKE HACKLE`[i]==1){
-    count_1=count_1+1
-  }
-    
-}
-```
             
 
 
 # Conclusion
 
+According to the previous models, we have some confusion about how does the days variable impacts 7 response variables and 6 dummy variables. In the model (fit.Fracture_Type), days makes a statistically significant difference for log-odds of preferring COMMINUTED, OBLIQUE, SEGMENTAL and TRANSVERSE relative to baseline/BUTTERFULY. In the model (fit.Fracture_Surface), days makes a statistically significant difference for log-odds of preferring non applicable and SMOOTH relative to baseline/INTERMEDIATE. In the model (fit.Bisect_Fracture), days makes moderate evidence that it makes the difference of the bone break. In the model (fit.Fracture_like), days is a statistically significant predictor in predicting the probability of Fracture_like.  In the model (fit.Fracture_Angle), days makes a statistically significant difference for log-odds of preferring non applicable and OBLIQUE relative to baseline/INTERMEDIATE. In the model (fit.Number_of_Fragments2), days is statistically significant in predicting the number of fragments. In the model (fit.Fracture_Outline), days makes a statistically significant difference for log-odds of preferring INTERMEDIATE and TRANSVERSE relative to baseline/CURVED/JAGGED. Based on the chi-square test, there are some feature is correlated to other dummy variables. Another sign to indicated correlated variables is there are too much zero in those dummy variable. In the model (fit.Feature.1), there is no evidence in support of the differences of the wake hackle feature when drying time changes. In the model (fit.Feature.2), there is no evidence in support of the differences in the bone hackle feature when drying time changes. In the model (fit.Feature.3), there is no evidence in support of the differences in the bone mirror feature when drying time changes. In the model (fit.Feature.4), there is no evidence in support of the differences of the cantilever curl feature when drying time changes. In the model (fit.Feature.5), there is no evidence in support of the differences of the arrest ridge feature when drying time changes. In the model (fit.Feature.6), there is no evidence in support of the differences of the Wallner lines feature when drying time changes.  
