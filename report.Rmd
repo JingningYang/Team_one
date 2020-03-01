@@ -21,18 +21,18 @@ theme_set(theme_pubr())
 ```
 
 # Introduction
-Our client, Reshma Satish, a PhD student at Boston University's Department of Forensic Anthropology,administered a project involves fracturing 135 long deer bones using a standardized fracturing apparatus over a period of 540 days. The bones are broken into 9 groups with 15 bones in each group and each group is fractured at different times(0 days,30 days,60 days,90 days,180 days,270 days, etc.) Her goal was to investigate how time of exposure of long bones affects variables such as the type of fracture angle, the type of fracture surface morphology,etc.that is created on the bones. Currently, our client only has data until day 270 since this experiment still keep going.
+Our client, Reshma Satish, a PhD student at Boston University's Department of Forensic Anthropology, administered a project involves fracturing 135 long deer bones using a standardized fracturing apparatus over a period of 540 days. The bones are broken into 9 groups with 15 bones in each group and each group is fractured at different times (0 days, 30 days, 60 days, 90 days, 180 days, 270 days, etc.) Her goal was to investigate how time of exposure of long bones affects variables such as the type of fracture angle, the type of fracture surface morphology, etc. which are created on the bones. Currently, our client only has data until day 360 since this experiment still keeps going.
 
-This report will start with a description of the EDA, as well as Data analysis/Data structure. Then we will describe the methods we will use on modeling part, followed by our analysis.
+This report will start with a description of the EDA, as well as Data cleaning/Data analysis/Data structure. Then we will describe the methods we will use on modeling part, followed by our analysis.
 
 # Data Cleaning and EDA
 
 ## Data structure
 
-We are provided the data in an excel document with 7 groups of drying days and a total of 105 bones. There are 10 variables in the dataset, but we will only focus on 8 of them, with Bisect Fracture and Fracture-like as binary responses, Number of fragments as a numerical response, and Fracture Angle, Fracture Type, Fracture Surface, Fracture Outline, and Fractographic Features as unordered categorical responses. 
+We are provided the data in an excel document with 7 groups of drying days and a total of 105 bones. There are 10 variables in the dataset, but we will only focus on 8 of them, with Bisect Fracture and Fracture-like as binary responses, Number of fragments as a numerical response, and Fracture Angle, Fracture Type, Fracture Surface, and Fracture Outline as unordered categorical responses. We will create dummy varibales for Fractographic Features, considering there can be multiple features at the same time.
 
 ## Data Cleaning
-```{r,echo=F}
+```{r,include=F}
 bone <- readxl::read_xlsx("BU Thesis Data-2.xlsx", sheet = 2)
 drop<-c()
 for (i in 1:nrow(bone))  {
@@ -70,7 +70,8 @@ At a first glance of the raw dataset, there are many NA inputs. After discussed 
 
 ## Create Dummy Variable
 
-There are some observation have multiple feature in Fractographic Features variable.  Then, we create 6 dummy variable to indicate which feature appaer for a given observation. 
+There are some observations have multiple features in Fractographic Features variable. Thus, we create 6 dummy variables to indicate which feature appears for a given observation. 
+
 ```{r}
 bone$`WAKE HACKLE`<-rep(0,nrow(bone))
 bone$`WAKE HACKLE`[grepl('WAKE HACKLE', bone$`Fractographic Features`)]<-1
@@ -98,7 +99,7 @@ bone$`WALLNER LINES`<-as.factor(bone$`WALLNER LINES`)
 ```
 
 ## EDA
-We conduct a basic exploratory data analysis (EDA) to visualize the data and find some patterns between variables. We focus on the two binary responses, Number of fragments, and the Fractographic Features as well.
+We conduct a basic exploratory data analysis (EDA) to visualize the data and find some patterns between variables. We focus on the two binary responses and number of fragments.
 ```{r,echo=F}
 options(digits = 2) 
 table1<-rbind(table(bone$`Bisecting Fracture`,bone$`Bone Specimen`)[2,]/15,table(bone$`Fracture-like`,bone$`Bone Specimen`)[2,]/15)
@@ -108,25 +109,27 @@ ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`
 
 ```
 In the table, we give a bisecting percentage and fracture-like percentage for each groups of bones in different drying days. We can see a pattern that with the drying days increasing, it's more likely to have a bisecting or fracture-like happened during the standardized fracturing apparatus.  
-In the boxplot, we can see several outliers in the first three groups and large amount of zero value. It's hard to figure a clear pattern in the first four groups, but later on, then number of fragments are increasing as the drying days increasing.  
+
+In the boxplot, we can see several outliers in the first three groups and large amount of zero value. It's hard to figure a clear pattern in the first four groups, but later on, number of fragments are increased as the drying days increased.  
 
 # Modeling & Interpretation
 
-We used logistic regression, poisson regression, and multinomial logit model based on different types of response variables in our dataset.
+We used logistic regression, poisson regression, negative binomial, and multinomial logit model based on different types of response variables in our dataset.
 
 ## Fracture Type
 ### COMMINUTED relative to BUTTERFULY:
   
-Intercept:  This is the multinomial logit estimate for COMMINUTED relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring COMMINUTED relative to BUTTERFULY is 0.8269632. Note that evaluating days equals to zero indicated that the day of starting  the experiment
-Days:  This is the multinomial logit estimate for a one unit increase in Days for COMMINUTED relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring COMMINUTED relative to BUTTERFULY would be expected to Increase by 10.00216.
+Intercept:  This is the multinomial logit estimate for COMMINUTED relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring COMMINUTED relative to BUTTERFULY is 0.8269632. Note that evaluating days equals to zero indicated that the day of starting the experiment.  
 
-T-statistics for days in Log(Prob(COMMINUTED)/Prob(BUTTERFULY)) equals to  0.8158939, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring COMMINUTED relative to BUTTERFULY
+Days:  This is the multinomial logit estimate for a one unit increase in Days for COMMINUTED relative to BUTTERFULY. If a subject was to increase Days by one point, the multinomial log-odds of preferring COMMINUTED relative to BUTTERFULY would be expected to increase by 10.00216.  
+
+T-statistics for Days in Log(Prob(COMMINUTED)/Prob(BUTTERFULY)) equals to  0.8158939, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring COMMINUTED relative to BUTTERFULY
 
 ### non applicable relative to BUTTERFULY
 
+Intercept:  This is the multinomial logit estimate for non applicable relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring non applicable relative to BUTTERFULY is 1.5166589. Note that evaluating days equals to zero indicated that the day of starting the experiment  
 
-Intercept:  This is the multinomial logit estimate for non applicable relative to BUTTERFULY when the predictor variables in the model are evaluated at zero. For day equals to zero, the logit for preferring non applicable relative to BUTTERFULY is1.5166589. Note that evaluating days equals to zero indicated that the day of starting the experiment
-Days: This is the multinomial logit estimate for a one unit increase in Days for non applicable relative to BUTTERFULY.  If a subject were to increase Days  by one point, the multinomial log-odds of preferring non applicable relative to BUTTERFULY would be expected to decrease by  0.0024548581.
+Days: This is the multinomial logit estimate for a one unit increase in Days for non applicable relative to BUTTERFULY.  If a subject was to increase Days by one point, the multinomial log-odds of preferring non applicable relative to BUTTERFULY would be expected to decrease by  0.0024548581.  
 
 T-statistics for days in Log(Prob(non applicable)/Prob(BUTTERFULY)) equals to | -0.0024548581/0.002647403| = 0.8948441, which is lower than 2.  Then, the Days does not make any difference for log-odds of preferring non applicable relative to BUTTERFULY
 
