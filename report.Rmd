@@ -222,7 +222,7 @@ In addition, when "bisect fracture" is 0, it means the bone did not break by the
 fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
 summary(fit.Bisect_Fracture) #estimated coefficients & p-value
 ```
-From the output, the estimated intercept coefficent 0.029 correspond to the log odds of broke the bone with average days, in other words, on average days, expected probability of broke the bone is expit(0.029)=0.4927=49%.    
+From the output, the estimated intercept coefficent 0.029 correspond to the log odds of broke the bone with average days, in other words, on average days, expected probability of broke the bone is expit(0.029)=.507=50.7%.    
 And one-unit increase in the predictor "days" increases the log odds of broke the bone(versus not broke the bone) by 0.0034.          
 Further, p-value of days is 0.052 indicates that there is no strong evident but moderate evidence in support of the differences of the bone broke by the machine or not affected by drying time.       
 ```{r}
@@ -238,7 +238,7 @@ In addition, when "Fracture-like" is 0, it means the bone has no surface feature
 fit.Fracture_like<-glm(bone$`Fracture-like`~bone$days,family = binomial())
 summary(fit.Fracture_like) #estimated coefficients, p-value
 ```
-From the output, the estimated intercept coefficent 0.2551 correspond to the log odds of made a mark on bone with average days, in other words, on average days, expected probability of made a mark on bone is expit(0.2551)=0.436=43.6%.            
+From the output, the estimated intercept coefficent 0.2551 correspond to the log odds of made a mark on bone with average days, in other words, on average days, expected probability of made a mark on bone is expit(0.2551)=0.563=56.3%.            
 And one-unit increase in the predictor "days" increases the log odds of made a mark on bone(versus no surface feature on bone) by 0.0064.         
 Also, p-value of days is 0.0055 indicates that there is strong evidence in determinging whether the bone has any surface feature after cut by the machine affected by drying time.         
 ```{r}
@@ -331,7 +331,7 @@ Since p-value 1 > 0.05 significant level, therefore, we have strong evidence to 
 tb.3 = table(bone$`WAKE HACKLE`, bone$`CANTILEVER CURL`) 
 chisq.test(tb.3) 
 ```
-Since p-value 0.7 > 0.05 significant level, therefore, we have strong evidence to retain the null hypothesis. Thus, "WAKE HACKLE" is independent of "CANTILEVER CURL".
+Since p-value 0.7 > 0.05 significant level, therefore, we have strong evidence to retain the null hypothesis. Thus, "WAKE HACKLE" is independent of "COMPRESSIONAL CURL".
 ```{r, echo=T}
 tb.4 = table(bone$`WAKE HACKLE`, bone$`ARREST RIDGE`) 
 chisq.test(tb.4) 
@@ -394,24 +394,35 @@ chisq.test(tb.15)
 Since p-value 1 > 0.05 significant level, therefore, we have strong evidence to retain the null hypothesis. Thus, "ARREST RIDGE" is independent of "WALLNER LINES".       
 
 ### Logistic Regression for six feature v.s. days
-
 ```{r}
 fit.Feature.1<-glm(bone$`WAKE HACKLE`~bone$days,family = binomial())
 summary(fit.Feature.1)
 binnedplot(fitted(fit.Feature.1),resid(fit.Feature.1,type="response"))
 ```
-
+From the output, the estimated intercept coefficent -1.337 correspond to the log odds of having a wake hackle feature on bone with average days, in other words, on average days, expected probability of having a wake hackle feature on bone is expit(-1.337)=0.208=20.8%.  
+And one-unit increase in the predictor “days” increases the log odds of having a wake hackle feature on bone(versus no wake hackle feature on bone) by -0.00035.  
+We can see the influence of drying days are relatively small and the 0.86 p-value shows no evidence in support of the differences of the wake hackle feature when drying time changes.  
+Binned residual plot shows our model fits well in this case.
 ```{r}
 fit.Feature.2<-glm(bone$`BONE HACKLE`~bone$days,family = binomial())
 summary(fit.Feature.2)
 binnedplot(fitted(fit.Feature.2),resid(fit.Feature.2,type="response"))
 ```
+Again, the low coefficient and p value of the varibale days, shows no evidence in support of the differences of the bone hackle feature when drying time changes.  
+Binned residual plot with only a few points outside the bound shows our model fits quite well in this case.
 
 ```{r}
 fit.Feature.3<-glm(bone$`BONE MIRROR`~bone$days,family = binomial())
 summary(fit.Feature.3)
 binnedplot(fitted(fit.Feature.3),resid(fit.Feature.3,type="response"))
 ```
+Again, the low coefficient and p value of the varibale days, shows no evidence in support of the differences of the bone mirror feature when drying time changes.  
+Binned residual plot with most points outside the bound shows our model fits bad in this case.
+
+```{r}
+count(bone,`BONE MIRROR`)
+```
+We only have 3 bones have the bone mirror feature, that may be the reason for the poor fitting.
 
 ```{r}
 fit.Feature.4<-glm(bone$`CANTILEVER CURL`~bone$days,family = binomial())
@@ -419,17 +430,27 @@ summary(fit.Feature.4)
 binnedplot(fitted(fit.Feature.4),resid(fit.Feature.4,type="response"))
 ```
 
+Again, the low coefficient and p value of the varibale days, shows no evidence in support of the differences of the cantilever curl feature when drying time changes.  
+Binned residual plot with most points inside the bound shows our model fits quite good in this case.
+
 ```{r}
 fit.Feature.5<-glm(bone$`ARREST RIDGE`~bone$days,family = binomial())
 summary(fit.Feature.5)
 binnedplot(fitted(fit.Feature.5),resid(fit.Feature.5,type="response"))
+count(bone,`ARREST RIDGE`)
 ```
+Again, the low coefficient and p value of the varibale days, shows no evidence in support of the differences of the arrest ridge feature when drying time changes.  
+Binned residual plot with most points outside the bound shows our model fits poor in this case. The possible reason is that we only have 4 bones have the arrest ridge feature
 
 ```{r}
 fit.Feature.6<-glm(bone$`WALLNER LINES`~bone$days,family = binomial())
 summary(fit.Feature.6)
 binnedplot(fitted(fit.Feature.6),resid(fit.Feature.6,type="response"))
+count(bone,`WALLNER LINES`)
 ```
+
+Again, the low coefficient and p value of the varibale days, shows no evidence in support of the differences of the wallner lines feature when drying time changes.  
+Binned residual plot with most points outside the bound shows our model fits poor in this case. The possible reason is that we only have 2 bones have the wallner lines feature
 
 ```{r}
 count_1 = 0
