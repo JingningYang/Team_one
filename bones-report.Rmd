@@ -1,0 +1,619 @@
+---
+title: "Deer Bones Report"
+author: "Jingning Yang, Yanwen Liu, He Guo, Wan-Chi Hsin"
+date: "3/3/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(readxl)
+library(dplyr)
+library(nnet)
+library(rlist)
+library(arm)
+library(knitr)
+library(MASS)
+library(ggpubr)
+theme_set(theme_pubr())
+# loading packages
+```
+
+# Introduction
+Our client, Reshma Satish, a master's student at Boston University's Department of Forensic Anthropology, administered a project regarding fracturing 135 long deer bones by using a standardized fracturing apparatus over 540 days. The bones are broken into 9 groups with 15 bones in each group and each group is fractured at different times (0 days, 30 days, 60 days, 90 days, 180 days, 270 days, etc.) Her goal was to investigate how the time of exposure of long bones affects variables such as the type of fracture angle, the type of fracture surface morphology, etc. which are created on the bones. Currently, our client only has data available up until day 360 since this experiment still keeps going so that we only have 7 groups bones right now.
+
+This report will start with a description of the EDA, as well as Data cleaning/Data analysis/Data structure. Then we will describe the methods we will use on the modeling part, followed by our analysis.
+
+# Data Cleaning and EDA
+
+## Data structure
+
+We are provided the data in an excel document with 7 groups of drying days and a total of 105 bones. There are 10 variables in the dataset, but we will only focus on 8 of them, with Bisect Fracture and Fracture-like as binary response variables, Number of fragments as a numerical response, and Fracture Angle, Fracture Type, Fracture Surface, and Fracture Outline as unordered categorical responses. For the purpose of analysis, we created dummy variables for Fractographic Features, considering there can be multiple features at the same time.
+
+## Data Cleaning
+```{r,include=F}
+bone <- readxl::read_xlsx("BU Thesis Data.xlsx", sheet = 2)
+drop<-c()
+for (i in 1:nrow(bone))  {
+  if (is.na(bone$`Bone Type`[i])){
+    drop <- c(drop, i)
+  }
+}
+bone<-bone[-drop,]
+# read bone and drop the date without information
+# ignore unobserved bone
+bone <- dplyr::select(bone,-`Bone Type`,-`Percentage of Feature Present`)
+# select columns from Bone Type to Percentage of Feature Present
+bone$`Bone Specimen` <- gsub("\\,.*","", bone$`Bone Specimen`)
+bone$`Bone Specimen` <- gsub("[^0-9]","", bone$`Bone Specimen`)
+bone$`days`<-as.numeric(bone$`Bone Specimen`)
+bone<-mutate(bone,`Bone Specimen`=fct_relevel(`Bone Specimen`,'0','30','60','90','180','270','360'))
+# creating variable drying day
+typeof(bone$`Bone Specimen`)
+bone$`Fractographic Features`[bone$`Fractographic Features`=="N/A"]<-"No Feature"
+bone$`Fracture Angle`[bone$`Fracture Angle`=="N/A"]<-"non applicable"
+bone$`Fracture Type`[bone$`Fracture Type`=="N/A"]<-"non applicable"
+bone$`Fracture Surface`[bone$`Fracture Surface`=="N/A"]<-"non applicable"
+bone$`Fracture Outline`[bone$`Fracture Outline`=="N/A"]<-"non applicable"
+#Clean dependent variable
+bone$`Bisecting Fracture`<-factor(bone$`Bisecting Fracture`)
+bone$`Fracture-like`<-factor(bone$`Fracture-like`)
+bone$`Fracture Angle`<-factor(bone$`Fracture Angle`)
+bone$`Fracture Type`<-factor(bone$`Fracture Type`)
+bone$`Fracture Surface`<-factor(bone$`Fracture Surface`)
+bone$`Fracture Outline`<-factor(bone$`Fracture Outline`)
+bone$`Fractographic Features`<-factor(bone$`Fractographic Features`)
+# transfer variables to factor 
+```
+At first glance of the raw dataset, there are many NA inputs. After discussing with our client, we decided to change NA in Fracture Angle, Fracture Type, Fracture Surface, and Fracture Outline to non-applicable and change NA in Fractographic Features to No Feature. Moreover, we created numerical variable representing drying days from the variable Bone Specimen for the purpose of analysis.
+
+## Create Dummy Variable
+
+There are some observations have multiple features in the Fractographic Features variable. Thus, we create 6 dummy variables to indicate which feature appears for a given observation. 
+
+```{r}
+bone$`WAKE HACKLE`<-rep(0,nrow(bone))
+bone$`WAKE HACKLE`[grepl('WAKE HACKLE', bone$`Fractographic Features`)]<-1
+bone$`WAKE HACKLE`<-as.factor(bone$`WAKE HACKLE`)
+
+bone$`BONE HACKLE`<-rep(0,nrow(bone))
+bone$`BONE HACKLE`[grepl('BONE HACKLE', bone$`Fractographic Features`)]<-1
+bone$`BONE HACKLE`<-as.factor(bone$`BONE HACKLE`)
+
+bone$`BONE MIRROR`<-rep(0,nrow(bone))
+bone$`BONE MIRROR`[grepl('BONE MIRROR', bone$`Fractographic Features`)]<-1
+bone$`BONE MIRROR`<-as.factor(bone$`BONE MIRROR`)
+
+bone$`CANTILEVER CURL`<-rep(0,nrow(bone))
+bone$`CANTILEVER CURL`[grepl("CANTILEVER CURL", bone$`Fractographic Features`)]<-1
+bone$`CANTILEVER CURL`<-as.factor(bone$`CANTILEVER CURL`)
+
+bone$`ARREST RIDGE`<-rep(0,nrow(bone))
+bone$`ARREST RIDGE`[grepl('ARREST RIDGE', bone$`Fractographic Features`)]<-1
+bone$`ARREST RIDGE`<-as.factor(bone$`ARREST RIDGE`)
+
+bone$`WALLNER LINES`<-rep(0,nrow(bone))
+bone$`WALLNER LINES`[grepl('WALLNER LINES', bone$`Fractographic Features`)]<-1
+bone$`WALLNER LINES`<-as.factor(bone$`WALLNER LINES`)
+```
+
+\newpage 
+
+## EDA
+We conducted a basic exploratory data analysis (EDA) to visualize the data and find some patterns between variables. We focus on the two binary responses and the number of fragments.
+```{r,echo=F}
+options(digits = 2) 
+table1<-rbind(table(bone$`Bisecting Fracture`,bone$`Bone Specimen`)[2,]/15,table(bone$`Fracture-like`,bone$`Bone Specimen`)[2,]/15)
+row.names(table1)<-c('Bisecting percentage','Fracture-like percentage')
+kable(table1,caption = 'Bisecting Fracture and Fracture-like percentage for different drying-day groups')
+```
+
+In the table shown above, we give a bisecting percentage and fracture-like percentage for each group of bones in different drying days. We can see a pattern that with the drying days increasing, it's more likely to have a bisecting or fracture-like happened during the use of the standardized fracturing apparatus.  
+
+&nbsp;
+&nbsp;
+
+```{r}
+ggplot(data = bone, mapping = aes(x = `Bone Specimen`, y = `Number of Fragments`)) + geom_boxplot()+labs(x="Drying Days")
+```
+
+In the boxplot, we can see several outliers in the first three groups and a large amount of zero value. It's hard to figure out a clear pattern in the first four groups, but later on, the number of fragments increased as the drying days increased.  
+
+\newpage 
+
+# Modeling & Interpretation
+
+We used logistic regression, Poisson regression, negative binomial regression, and multinomial logit models based on different types of response variables in our dataset.
+
+## 1. Bisect Fracture
+
+Since the response variable "bisect fracture" is a binary outcome (0 or 1), we are using logistic regression to figure out the relationship between the probability of "bisect fracture" and the value of "days." In addition, when "bisect fracture" is 0, it means the bone was not broken by the standard fracturing machine, otherwise, it means the bone was broken by the machine.    
+
+For logistics regression, we assume a linear relationship between the predictor variable and the log-odds of the event the bone is broken by the machine. This linear relationship can be written in the following mathematical form:
+\[
+\text{log}(\frac{p}{1-p}) = \beta_0 + \beta_1 \times Days,
+\]
+where $p$ is the probability that the bone is broken by the machine.
+
+```{r}
+fit.Bisect_Fracture<-glm(bone$`Bisecting Fracture`~bone$days,family = binomial())
+summary(fit.Bisect_Fracture) #estimated coefficients & p-value
+```
+
+From the output, the estimated coefficient for the intercept is 0.0299, which is the log odds of a bone with "days" of zero being broken. In other words, the expected probability of being broken when "days" equal to zero is expit(0.0299) = 0.5074 = 51\%.
+
+The coefficient the predictor "days" is 0.0034, which means a one-unit increase in the predictor "days" increases the log odds of breaking the bone (versus not breaking the bone) by 0.0034. That is, with one-unit increase in "days," the expected odds of breaking the bone multiplied by a factor of exp(0.0034) = 1.0034. So, we can say for a one-unit increase in "days," we expect to see about 0.34\% increase in the odds of being broken.
+
+Further, the p-value of days is 0.052, which indicates that there is no strong evident but moderate evidence in support of the differences of the bone broke affected by drying time.  
+
+```{r}
+binnedplot(fitted(fit.Bisect_Fracture),resid(fit.Bisect_Fracture,type="response"))
+```
+
+Since the discrete residual plot does not tell us much about the model fit, we are using Binned residual plot for this model. Due to every point fall within the bounds, our model fits well in this case.
+
+## 2. Fracture like
+Since "Fracture-like" is a binary outcome (0 or 1) as well, we used logistic regression to figure out their relationship. Besides, when "Fracture-like" is 0, it means the bone has no surface feature after cut by the standard fracturing machine, otherwise, it means fracturing machine made a mark on the bone.
+
+```{r}
+fit.Fracture_like<-glm(bone$`Fracture-like`~bone$days,family = binomial())
+summary(fit.Fracture_like) #estimated coefficients, p-value
+```
+
+From the output, the estimated coefficient for the intercept is 0.2551, which is the log odds of a bone with "days" of zero making a mark on bone. In other words, the expected probability of making a mark on bone when "days" equal to zero is expit(0.2551) = 0.5634 = 56\%.
+
+The coefficient the predictor "days" is 0.0064, which means a one-unit increase in the predictor "days" increases the log odds of breaking the bone (versus not breaking the bone) by 0.0034. That is, with one-unit increase in "days," the expected odds of breaking the bone multiplied by a factor of exp(0.0064) = 1.0064. So, we can say for a one-unit increase in "days," we expect to see about 0.64\% increase in the odds of making a mark on bone.
+
+Also, the p-value of days is 0.0055, which indicates that there is strong evidence in determining whether the bone has any surface feature affected by drying time.     
+
+```{r}
+binnedplot(fitted(fit.Fracture_like),resid(fit.Fracture_like,type="response"))
+```           
+
+Same logic as the above part, our model fits well in this case.
+
+## 3. Fracture Angle
+
+The variable “Fracture Angle” is a no natural-order variable (nominal), since we cannot compare the order of angle of fresh bone and dry bone, and also N/A (non-applicable) in this variable. We used a multinomial logit model in this case, since the outcome variable in this model has more than 2 levels. 
+
+```{r}
+fit.Fracture_Angle<-multinom(bone$`Fracture Angle`~bone$days,trace = FALSE)
+summary(fit.Fracture_Angle)
+```
+
+From the output, the baseline level is Fracture Angle = Intermediate. A one-unit increase in the variable "days" is associated with the decrease in the log odds of being in non-applicable fracture angle vs Intermediate fracture angle in the amount of 0.0057. A one-unit increase in the variable "days" is associated with the decrease in the log odds of being in Oblique fracture angle vs Intermediate fracture angle in the amount of 0.003. Similarly, we explain Right angles in the same way.
+        
+Since the summary of multinomial logit model does not provide p-values, we can still get the p-values of the coefficients by calculating z value and putting it into the formula: $z = (\hat{\beta} - 0)/sd$.  
+
+```{r}
+z <- summary(fit.Fracture_Angle)$coefficients / summary(fit.Fracture_Angle)$standard.errors
+p <- (1-pnorm(abs(z),0,1)) * 2
+p     
+```
+
+From the output, it represents the p-values of coefficients. We do not have strong evidence in support of the differences of Oblique and Intermediate & Right angles and Intermidiate are affected by "days."
+
+```{r}
+binnedplot(fitted(fit.Fracture_Angle),resid(fit.Fracture_Angle,type="response"))
+```
+
+It shows that our model fit well.
+
+## 4. Fracture Type
+
+According to the Fracture Type variable, which has 6 discrete levels and those aren't ordinal, which are non applicable, COMMINUTED SEGMENTAL, BUTTERFLY, OBLIQUE and TRANSVERSE. Then we used a multinomial logit model.
+
+```{r}
+fit.Fracture_Type<-multinom(bone$`Fracture Type`~bone$days,trace = FALSE)
+summary(fit.Fracture_Type)
+```
+
+### COMMINUTED relative to BUTTERFULY:
+ 
+Intercept:  When day equals to zero, the log odds of being COMMINUTED relative to BUTTERFLY is 0.83. Note that day equal to zero indicates the starting day of the experiment. (exp(0.83) = 2.293)
+
+Days: If a subject were to increase Days by a one-unit, the log odds of being COMMINUTED relative to BUTTERFLY would be expected to increase by 0.00217. (exp(0.00217) = 1.0022)
+
+### non applicable relative to BUTTERFULY
+
+Intercept:  When day equals to zero, the log odds for being non-applicable relative to BUTTERFLY is 1.52. (exp(1.52) = 4.572)
+
+Days: If a subject were to increase Days by a one-unit, the log odds of being non-applicable relative to BUTTERFLY would be expected to decrease by 0.00245. (exp(-0.00245) = 0.998)
+
+### OBLIQUE relative to BUTTERFULY:
+
+Intercept:  When day equals to zero, the log odds for being OBLIQUE relative to BUTTERFLY is -0.19. (exp(-0.19) = 0.827)
+
+Days: If a subject were to increase Days by a one-unit, the log odds of being OBLIQUE relative to BUTTERFLY would be expected to decrease by 0.00278. (exp(-0.00278) = 0.997)
+
+### SEGMENTAL relative to BUTTERFULY:
+
+Intercept:  When day equals to zero, the log odds for being SEGMENTAL relative to BUTTERFLY is -0.60. (exp(-0.60) = 0.5488)
+
+Days: If a subject were to increase Days by a one-unit, the log odds of being SEGMENTAL relative to BUTTERFLY would be expected to decrease by 0.00067. (exp(-0.00067) = 0.999)
+
+### TRANSVERSE relative to BUTTERFULY:
+
+Intercept:  When day equals to zero, the log odds for being TRANSVERSE relative to BUTTERFLY is -1.98. (exp(-1.98) = 0.138)
+
+Days: If a subject were to increase Days by a one-unit, the log odds of being TRANSVERSE relative to BUTTERFLY would be expected to decrease by 0.00437. (exp(-0.00437) = 0.996)
+
+### Checking Residual 
+
+According to the Binned residual plot, there is no obvious issue. 
+
+```{r}
+binnedplot(fitted(fit.Fracture_Type),resid(fit.Fracture_Type,type="response"))
+```
+
+### Checking P-values for each corresponding levels relative to the baseline: BUTTERFULY
+
+```{r}
+t_stat_type <- summary(fit.Fracture_Type)$coefficients / summary(fit.Fracture_Type)$standard.errors
+T_statistics<-t_stat_type[,1]
+p_value<-setNames(c(0,0,0,0,0), c("COMMINUTED", "non applicable","OBLIQUE","SEGMENTAL","TRANSVERSE "))
+for(i in 1:5){
+  p_value[i]<-(1-pnorm(abs(T_statistics[i]),0,1)) * 2
+}
+p_value
+```
+
+The only p-value smaller than 0.05 is the one corresponding to the level non-applicable, which means that days make a statistical significance for log odds of being non-applicable relative to baseline/BUTTERFLY. However, we note that comparing with those non-applicable may not be of interest.
+
+The p-values of COMMINUTED, OBLIQUE, SEGMENTAL and TRANSVERSE are larger than 0.05, so days do not make statistically significant differences for log odds of being COMMINUTED, OBLIQUE, SEGMENTAL and TRANSVERSE relative to baseline/BUTTERFLY, respectively.
+
+## 5. Number of Fragments
+
+Considering that "Number of Fragments" is a count response variable, we use the Poisson regression at first.
+
+For Poisson regression, we assume a linear relationship between the predictor variable and the log of the number of fragments. This linear relationship can be written in the following mathematical form:
+\[
+\text{log}(Count) = \beta_0 + \beta_1 \times Days
+\]
+
+```{r,echo=T}
+fit.Number_of_Fragments1 <- glm(bone$`Number of Fragments` ~ bone$days, family="poisson")
+summary(fit.Number_of_Fragments1) #estimated coefficients
+
+pchisq(fit.Number_of_Fragments1$deviance,df=fit.Number_of_Fragments1$df.residual, lower.tail=FALSE)
+```
+
+Here our null hypothesis is that our model is correctly specified. The extremely low p-value shows that we reject this hypothesis, which means the Poisson regression model fits poorly. Next, we check the dispersion of the data. 
+
+```{r}
+regout <- glm(bone$`Number of Fragments`~bone$days, family=quasipoisson)
+summary.glm(regout)$dispersion
+```
+
+The value of 2.9 suggests that there is an over-dispersion problem. So we consider using a negative binomial model.
+
+```{r,echo=T}
+fit.Number_of_Fragments2 <- glm.nb(bone$`Number of Fragments` ~ bone$days)
+summary(fit.Number_of_Fragments2)
+pchisq(fit.Number_of_Fragments2$deviance,df=fit.Number_of_Fragments2$df.residual, lower.tail=FALSE)
+```
+
+Using the negative binomial model, we have a better model fit. The only variable "days" has a coefficient of 0.002247, which is statistically significant with p-value 0.029. This means that for each one-unit increase in "days", the expected log count of the number of fragments increases by 0.002247. It can be also interpreted as for each 100 unit increase in "days", the expected count of the number of fragments will be increased by 22.5\%. (exp(0.002247) = 1.0025)
+
+```{r}
+plot(fitted(fit.Number_of_Fragments2), residuals(fit.Number_of_Fragments2) / sigma(fit.Number_of_Fragments2))
+```
+
+The model diagnostics suggest that the model assupmtion is not violated.
+
+## 6. Fracture Surface
+
+We regard "Fracture Surface" as no natural-order(nominal) variable, same reason as the "Fracture Angle" part, thus we used a multinomial logit model.
+
+```{r}
+fit.Fracture_Surface<-multinom(bone$`Fracture Surface`~bone$days,trace = FALSE)
+summary(fit.Fracture_Surface)
+```
+
+### non applicable relative to INTERMEDIATE:
+
+Log(Prob(non applicable)/Prob(INTERMEDIATE))= 2.185 -0.0087*Days
+
+Intercept: This is the multinomial logit estimate for non-applicable relative to INTERMEDIATE when the predictor variable in the model are evaluated at zero. When day equals to zero, the log odds for being non applicable relative to INTERMEDIATE is 2.185. (exp(2.185) = 8.891)
+
+Days: If a subject were to increase Days by a one-unit, the log odds of being non applicable relative to INTERMEDIATE would be expected to decrease by 0.0087. (exp(-0.0087) = 0.991)
+
+### ROUGH relative to INTERMEDIATE:
+
+Log(Prob(ROUGH )/Prob(INTERMEDIATE))= -23.616 + 0.0602*Days
+
+Intercept: When day equals to zero, the log odds for being ROUGH relative to INTERMEDIATE is -23.616. (exp(-23.616) = 5.542 $\times 10^{-11}$).
+
+Days: If a subject were to increase Days by a one-unit, the log odds of being ROUGH relative to INTERMEDIATE would be expected to increase by 0.0602. (exp(0.0602) = 1.062)
+
+### SMOOTH relative to INTERMEDIATE:
+
+Log(Prob(SMOOTH)/Prob(INTERMEDIATE))= 2.256-0.0075*Days
+
+Intercept: When day equals to zero, the log odds for being SMOOTH relative to INTERMEDIATE is 2.256. (exp(2.256) = 9.544).
+
+Days: If a subject were to increase Days by a one-unit, the log odds of being SMOOTH relative to INTERMEDIATE would be expected to decrease by 0.0075. (exp(-0.0075) = 0.993)
+
+### Checking residuals
+
+According to the Binned residual plot, there is no issue of violating the model assumption. 
+
+```{r}
+binnedplot(fitted(fit.Fracture_Surface),resid(fit.Fracture_Surface,type="response"))
+```
+
+### Checking P-values for each corresponding outcomes relative to Baseline/INTERMEDIATE
+
+```{r}
+t_stat_type.Surface <- summary(fit.Fracture_Surface)$coefficients / summary(fit.Fracture_Surface)$standard.errors
+T_statistics.Surface<-t_stat_type.Surface[,1]
+p_value.Surface<-setNames(c(0,0,0), c( "non applicable","ROUGH","SMOOTH"))
+for(i in 1:3){
+  p_value.Surface[i]<-(1-pnorm(abs(T_statistics[i]),0,1)) * 2
+}
+p_value.Surface
+```
+
+The p-value of ROUGH is smaller than 0.05, which means days make a statistical significance for log-odds of being ROUGH relatives to baseline/INTERMEDIATE.
+
+The p-values of non-applicable and SMOOTH are larger than 0.05, so days do not make a statistically significant differences for log-odds of being non-applicable and SMOOTH relative to baseline/INTERMEDIATE.
+
+## 7. Fracture Outline
+We regard "Fracture Outline" as no natural-order(nominal) variable, same reason as the "Fracture Angle" part, thus we used a multinomial logit model.
+
+```{r}
+fit.Fracture_Outline<-multinom(bone$`Fracture Outline`~bone$days,trace = FALSE)
+coef(fit.Fracture_Outline) #estimated coefficients
+```
+
+From the output, the baseline is Fracture Angle = Curved/Jagged. A one-unit increase in the variable "days" is associated with the decrease in the log odds of being in intermediate fracture outline vs curved fracture outline in the amount of 0.0155. (exp(0.0155) = 1.0156)   
+
+Similarly, a one-unit increase in the variable "days" is associated with the decrease in the log odds of being in non-applicable fracture outline vs curved fracture outline in the amount of 0.0043.    
+
+Also, a one-unit increase in the variable "days" is associated with the decrease in the log odds of being in transverse vs curved fracture outline in the amount of 0.0059.      
+
+Getting the corresponding p-values by calculating z score:   
+
+```{r}
+z <- summary(fit.Fracture_Outline)$coefficients / summary(fit.Fracture_Outline)$standard.errors
+p <- (1-pnorm(abs(z),0,1)) * 2
+p
+```
+
+From the output, the non-applicable is with p-value less than 0.05, so we have strong evidence in support of the differences between non-applicable and the baseline level curved fracture outline affected by drying time. However, we note again that comparing non-applicable may not be of interest.   
+
+```{r}
+binnedplot(fitted(fit.Fracture_Outline),resid(fit.Fracture_Outline,type="response"))
+```
+
+It looks that our model fit well in this case.
+
+## 8. Fractographic Features
+
+We have 6 different features, and since some of the features appear at the same time, we create 6 dummy variables for different features, and build a logistic regression model for each feature to figuring out their relationship with drying time. Then, we use the chi-square test to evaluate whether 2 features are independent or not.      
+
+### Logistic Regression for six features v.s. days
+
+#### WAKE HACKLE 
+
+```{r}
+fit.Feature.1<-glm(bone$`WAKE HACKLE`~bone$days,family = binomial())
+summary(fit.Feature.1)
+binnedplot(fitted(fit.Feature.1),resid(fit.Feature.1,type="response"))
+
+count(bone,`WAKE HACKLE`)
+```
+
+From the output, the estimated coefficient for the intercept is -1.337, which is the log odds of a bone with "days" of zero having a wake hackle feature on bone. In other words, the expected probability of having a wake hackle feature on bone when "days" equal to zero is expit(-1.337)=0.208=20.8\%. 
+
+The coefficient the predictor "days" is -0.00035, which means a one-unit increase in the predictor "days" decreases the log odds of having a wake hackle feature on bone (versus not having a wake hackle feature on bone) by 0.00035. That is, with one-unit increase in "days," the expected odds of breaking the bone multiplied by a factor of exp(-0.00035) = 0.999. So, we can say for a one-unit increase in "days," we would expect there is no difference in the odds of having a wake hackle feature on bone.
+
+The p-value of days is 0.86, which indicates that there is no strong evidence in support of the differences of the wake hackle feature affected by drying time.        
+
+Binned residual plot shows our model fits well in this case. 
+
+#### BONE HACKLE
+
+```{r}
+fit.Feature.2<-glm(bone$`BONE HACKLE`~bone$days,family = binomial())
+summary(fit.Feature.2)
+binnedplot(fitted(fit.Feature.2),resid(fit.Feature.2,type="response"))
+
+count(bone,`BONE HACKLE`)
+```
+
+Similarly, the p-value of the variable days suggests no strong evidence in support of the differences in the bone hackle feature affected by drying time.  
+
+Binned residual plot with only a few points outside the bound shows our model fits quite well in this case.
+
+#### BONE MIRROR
+
+```{r}
+fit.Feature.3<-glm(bone$`BONE MIRROR`~bone$days,family = binomial())
+summary(fit.Feature.3)
+binnedplot(fitted(fit.Feature.3),resid(fit.Feature.3,type="response"))
+```
+
+Again, the p-value of the variable days suggests no strong evidence in support of the differences in the bone mirrow feature affected by drying time.  
+
+Binned residual plot with most points outside the bound shows our model fits bad in this case. See below for the possible reason.
+
+```{r}
+count(bone,`BONE MIRROR`)
+```
+
+We only have 3 bones that have the bone mirror feature, which could be the reason for the poor fitting.
+
+#### CANTILEVER CURL
+
+```{r}
+fit.Feature.4<-glm(bone$`CANTILEVER CURL`~bone$days,family = binomial())
+summary(fit.Feature.4)
+binnedplot(fitted(fit.Feature.4),resid(fit.Feature.4,type="response"))
+count(bone,`CANTILEVER CURL`)
+```
+
+Again, the p-value of the variable days suggests no strong evidence in support of the differences in the bone CANTILEVER CURL feature affected by drying time.  
+Binned residual plot with most points outside the bound shows our model fits poor in this case. The possible reason is that we only have 4 bones have the CANTILEVER CURL feature
+#### ARREST RIDGE
+
+```{r}
+fit.Feature.5<-glm(bone$`ARREST RIDGE`~bone$days,family = binomial())
+summary(fit.Feature.5)
+binnedplot(fitted(fit.Feature.5),resid(fit.Feature.5,type="response"))
+
+count(bone,`ARREST RIDGE`)
+```
+
+Again, the p-value of the variable days suggests no strong evidence in support of the differences in the bone ARREST RIDGE feature affected by drying time.  
+
+Binned residual plot with most points outside the bound shows our model fits poor in this case. The possible reason is that we only have 4 bones have the arrest ridge feature
+
+#### WALLNER LINES
+
+```{r}
+fit.Feature.6<-glm(bone$`WALLNER LINES`~bone$days,family = binomial())
+summary(fit.Feature.6)
+binnedplot(fitted(fit.Feature.6),resid(fit.Feature.6,type="response"))
+
+count(bone,`WALLNER LINES`)
+```
+
+The p-value of days is 0.92, which indicates that there is no strong evidence in support of the differences of the WALLNER LINES feature affected by drying time.        
+
+Binned residual plot with most points outside the bound shows our model fits poor in this case. The possible reason is that we only have 2 bones have the wallner lines feature.
+
+\newpage
+### Chi-square test for Independence
+The null hypothesis of chi-square: 2 variables/features are independent with each other.      
+```{r, echo=T, warning=F}
+tb.1 = table(bone$`WAKE HACKLE`, bone$`BONE HACKLE`) 
+chisq.test(tb.1) 
+```
+
+Since p-value 0.0005 < 0.05 significant level, therefore, we have strong evidence to reject the null hypothesis. Thus, being "WAKE HACKLE" is related to being "BONE HACKLE".
+
+```{r, echo=T, warning=F}
+tb.2 = table(bone$`WAKE HACKLE`, bone$`BONE MIRROR`) 
+chisq.test(tb.2) 
+```
+
+Since p-value 1 > 0.05 significant level, therefore, we retain the null hypothesis. Thus, "WAKE HACKLE" is independent of "BONE MIRROR".
+
+```{r, echo=T, warning=F}
+tb.3 = table(bone$`WAKE HACKLE`, bone$`CANTILEVER CURL`) 
+tb.3
+```
+
+We cannot test independence in this case.
+
+```{r, echo=T, warning=F}
+tb.4 = table(bone$`WAKE HACKLE`, bone$`ARREST RIDGE`) 
+chisq.test(tb.4) 
+```
+
+Since p-value 0.03 < 0.05 significant level, we have somewhat strong evidence to reject the null hypothesis. Thus, "WAKE HACKLE" is related to "ARREST RIDGE".
+
+```{r, echo=T, warning=F}
+tb.5 = table(bone$`WAKE HACKLE`, bone$`WALLNER LINES`) 
+chisq.test(tb.5) 
+```
+
+Since p-value is close to 0.05 significant level, we retain the null hypothesis. Thus, "WAKE HACKLE" is independent of "WALLNER LINES".
+
+```{r, echo=T, warning=F}
+tb.6 = table(bone$`BONE HACKLE`, bone$`BONE MIRROR`) 
+chisq.test(tb.6) 
+```
+
+Since p-value 1 > 0.05 significant level, we have retain the null hypothesis. Thus, "BONE HACKLE" is independent of "BONE MIRROR".
+
+```{r, echo=T, warning=F}
+tb.7 = table(bone$`BONE HACKLE`, bone$`CANTILEVER CURL`) 
+tb.7
+```
+
+We cannot test independence in this case.
+
+```{r, echo=T, warning=F}
+tb.8 = table(bone$`BONE HACKLE`, bone$`ARREST RIDGE`) 
+chisq.test(tb.8) 
+```
+
+Since p-value 0.005 < 0.01 significant level, we have strong evidence to reject the null hypothesis. Thus, "BONE HACKLE" is related to "ARREST RIDGE".
+
+```{r, echo=T, warning=F}
+tb.9 = table(bone$`BONE HACKLE`, bone$`WALLNER LINES`) 
+chisq.test(tb.9)
+```
+
+Since p-value 1 > 0.05 significant level, we retain the null hypothesis. Thus, "BONE HACKLE" is independent of "WALLER LINES".
+
+```{r, echo=T, warning=F}
+tb.10 = table(bone$`BONE MIRROR`, bone$`CANTILEVER CURL`) 
+tb.10
+```
+
+We cannot test independence in this case.
+          
+```{r, echo=T, warning=F}
+tb.11 = table(bone$`BONE MIRROR`, bone$`ARREST RIDGE`) 
+chisq.test(tb.11)
+```
+
+Since p-value 1 > 0.05 significant level, we retain the null hypothesis. Thus, "BONE MIRROR" is independent of "ARREST RIDGE".
+
+```{r, echo=T, warning=F}
+tb.12 = table(bone$`BONE MIRROR`, bone$`WALLNER LINES`) 
+chisq.test(tb.12)
+```
+
+Since the p-value 1 > 0.05 significant level, therefore, we retain the null hypothesis. Thus, "BONE MIRROR" is independent of "WALLNER LINES".
+
+```{r, echo=T, warning=F}
+tb.13 = table(bone$`CANTILEVER CURL`, bone$`ARREST RIDGE`) 
+tb.13
+```
+
+We cannot test independence in this case.
+
+```{r, echo=T, warning=F}
+tb.14 = table(bone$`CANTILEVER CURL`, bone$`WALLNER LINES`) 
+chisq.test(tb.14)
+```
+
+We cannot test independence in this case.
+
+```{r, echo=T, warning=F}
+tb.15 = table(bone$`ARREST RIDGE`, bone$`WALLNER LINES`) 
+chisq.test(tb.15)
+```
+
+Since p-value 1 > 0.05 significant level, therefore, we retain the null hypothesis. Thus, "ARREST RIDGE" is independent of "WALLNER LINES".       
+
+\newpage
+# Conclusion
+
+According to the previous models, we have some conclusion about how the variable days impacts 7 response variables and 6 dummy variables for Fractographic Features.            
+In the model (fit.Bisect_Fracture), we moderate evidence in support of the difference of being broken bone affected by drying time.
+
+In the model (fit.Fracture_like), "days" is a statistically significant predictor in affecting Fracture_like. 
+
+In the model (fit.Fracture_Angle), "days" do not make a statistically significant difference for log-odds of being OBLIQUE and RIGHT ANGLES relative to baseline/INTERMEDIATE.  
+
+In the model (fit.Fracture_Type), "days" do not make a statistically significant difference for log-odds of being COMMINUTED, OBLIQUE, SEGMENTAL and TRANSVERSE relative to baseline/BUTTERFLY.      
+
+In the model (fit.Number_of_Fragments2), "days" is a statistically significant predictor in affecting the number of fragments.    
+
+In the model (fit.Fracture_Surface), "days" makes a statistically significant difference for log-odds of being ROUGH relative to baseline/INTERMEDIATE.     
+
+In the model (fit.Fracture_Outline), "days" do not make a statistically significant difference for log-odds of being INTERMEDIATE or TRANSVERSE relative to baseline/CURVED/JAGGED.     
+
+The following are conclusion for the variable Fractographic Features.
+
+Based on the chi-square test, there are some features correlated to other features. A concern should be noted is that there are too many zeros in the dummy variables created for Fractographic Features. 
+
+In all of the models for Fractographic Features, there is no evidence in support of the differences of any features affected by drying time.   
+
+
