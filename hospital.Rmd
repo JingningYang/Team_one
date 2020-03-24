@@ -33,7 +33,7 @@ Since this study utilize a two stage stratified random sampling technique to sel
 # medium effect size (Cohen's d) of 0.1. 
 library(sjstats)
 library(lme4)
-samplesize_mixed(eff.size = .1, k = 4)
+samplesize_mixed(eff.size = .1, k = 4) #k = 4??
 #> $`Subjects per Cluster`
 #> [1] 785
 #> $`Total Sample Size`
