@@ -1,0 +1,53 @@
+---
+title: "hospital"
+author: "Jingning Yang"
+date: "3/24/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+Designing an impact evaluation study as part of DrPH dissertation. Study is located in Lagos Nigeria.
+The overall study is a concurrent mixed-methods study that combines a quasi-experimental controlled before/after design with qualitative methods.
+
+Focus on the quality of four cares,  Antenatal Care (ANC), Febrile under 5 children,  Hypertension and Diabetes
+
+This study will utilize a two stage stratified random sampling technique to select health facilities. Six strata will be created using the following criteria: ownership (public versus private), facility type (primary versus secondary), and size (based on annual outpatient patient volume: low versus high volume facilities). Seven health facilities will be randomly selected within each stratum and in cases where only one facility is available in a stratum, that facility will be automatically selected
+
+
+## Client's requests
+
+1. What are the pros and cons of framing the outcome measures as proportion as against a continuous variable?
+2. What are the options for calculating sample size?
+3. What are the approaches to thinking about secondary outcomes regarding power and sample size?
+4. Does my plan to use propensity score matching impact my sample size calculation?
+
+## Power calculation
+Since this study utilize a two stage stratified random sampling technique to select health facilities, we used "samplesize_mixed()" to computes an approximated sample size for linear mixed models(two-level-designs).
+```{r}
+# Sample size for multilevel model with 4 cluster groups and a small to
+# medium effect size (Cohen's d) of 0.1. 
+library(sjstats)
+library(lme4)
+samplesize_mixed(eff.size = .1, k = 4)
+#> $`Subjects per Cluster`
+#> [1] 785
+#> $`Total Sample Size`
+#> [1] 3141
+#785 subjects per cluster and hence a total sample size of about 3141 observations is needed.
+
+# Sample size for multilevel model with 20 cluster groups and a medium
+# to large effect size for linear models of 0.2. Five subjects per cluster and
+# hence a total sample size of about 107 observations is needed.
+samplesize_mixed(eff.size = .1, df.n = 5, k = 4, power = .8) #df.n = ???
+#> $`Subjects per Cluster`
+#> [1] 33
+#> 
+#> $`Total Sample Size`
+#> [1] 134
+```
+
