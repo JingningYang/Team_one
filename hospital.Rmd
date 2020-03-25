@@ -41,11 +41,11 @@ samplesize_mixed(eff.size = .1, k = 4) #k = 4??
 #> [1] 3141
 #785 subjects per cluster and hence a total sample size of about 3141 observations is needed.
 
-# Sample size for multilevel model with 20 cluster groups and a medium
-# to large effect size for linear models of 0.2. Five subjects per cluster and
+# Sample size for multilevel model with 4 cluster groups and a medium
+# to large effect size for linear models of 0.1. Five subjects per cluster and
 # hence a total sample size of about 107 observations is needed.
-samplesize_mixed(eff.size = .1, df.n = 5, k = 4, power = .8) #df.n = ???
-#smpsize_lmm(eff.size = .1, df.n = 5, k = 4, power = .8) #same as above
+samplesize_mixed(eff.size = .1, k = 4, power = .8, n = 7)
+#smpsize_lmm(eff.size = .1, df.n = 7, k = 4, power = .8) #same as above
 #> $`Subjects per Cluster`
 #> [1] 33
 #> 
