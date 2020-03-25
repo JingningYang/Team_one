@@ -34,6 +34,7 @@ Since this study utilize a two stage stratified random sampling technique to sel
 library(sjstats)
 library(lme4)
 samplesize_mixed(eff.size = .1, k = 4) #k = 4??
+#smpsize_lmm(eff.size = .1, k = 4) #same as above
 #> $`Subjects per Cluster`
 #> [1] 785
 #> $`Total Sample Size`
@@ -44,10 +45,12 @@ samplesize_mixed(eff.size = .1, k = 4) #k = 4??
 # to large effect size for linear models of 0.2. Five subjects per cluster and
 # hence a total sample size of about 107 observations is needed.
 samplesize_mixed(eff.size = .1, df.n = 5, k = 4, power = .8) #df.n = ???
+#smpsize_lmm(eff.size = .1, df.n = 5, k = 4, power = .8) #same as above
 #> $`Subjects per Cluster`
 #> [1] 33
 #> 
 #> $`Total Sample Size`
 #> [1] 134
 ```
+
 
