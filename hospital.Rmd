@@ -45,7 +45,7 @@ samplesize_mixed(eff.size = .1, k = 4) #k = 4??
 # to large effect size for linear models of 0.1. Five subjects per cluster and
 # hence a total sample size of about 107 observations is needed.
 samplesize_mixed(eff.size = .1, k = 4, power = .8, n = 7)
-smpsize_lmm(eff.size = .1, df.n = 7, k = 4, power = .8) #
+smpsize_lmm(eff.size = .1, df.n = 3, k = 4, power = .8) #
 #> $`Subjects per Cluster`
 #> [1] 38
 #> 
